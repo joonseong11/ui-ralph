@@ -30,27 +30,19 @@ function install() {
   const sourceCommandsDir = path.join(__dirname, '..', 'commands');
   const sourceE2eDir = path.join(__dirname, '..', 'e2e', 'utils');
 
-  // Install command skills
-  fs.mkdirSync(targetCommandsDir, { recursive: true });
-  const skills = fs.readdirSync(sourceCommandsDir).filter(f => f.endsWith('.md'));
-
-  for (const file of skills) {
-    const src = path.join(sourceCommandsDir, file);
-    const dest = path.join(targetCommandsDir, file);
-
-    // Don't overwrite if user has customized
-    if (fs.existsSync(dest)) {
-      const srcContent = fs.readFileSync(src, 'utf8');
-      const destContent = fs.readFileSync(dest, 'utf8');
-      if (srcContent !== destContent) {
-        console.log(`  skip: ${file} (customized, not overwriting)`);
-        continue;
-      }
+  // Remove legacy v0.1.0 command files
+  const legacyFiles = ['ui-dev.md', 'ui-spec.md', 'ui-gen.md', 'ui-verify.md'];
+  for (const file of legacyFiles) {
+    const filePath = path.join(targetCommandsDir, file);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`  - .claude/commands/${file} (legacy, removed)`);
     }
-
-    fs.copyFileSync(src, dest);
-    console.log(`  + .claude/commands/${file}`);
   }
+
+  // Install command skills (recursively copy files and directories)
+  fs.mkdirSync(targetCommandsDir, { recursive: true });
+  copyCommandsRecursive(sourceCommandsDir, targetCommandsDir, '');
 
   // Install e2e utilities
   fs.mkdirSync(targetE2eDir, { recursive: true });
@@ -76,17 +68,56 @@ function install() {
   console.log('\n✓ ui-ralph installed. Use /ui-ralph in Claude Code to start.');
 }
 
+function copyCommandsRecursive(srcDir, destDir, prefix) {
+  const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const src = path.join(srcDir, entry.name);
+    const dest = path.join(destDir, entry.name);
+    const displayPath = prefix ? `${prefix}/${entry.name}` : entry.name;
+
+    if (entry.isDirectory()) {
+      fs.mkdirSync(dest, { recursive: true });
+      copyCommandsRecursive(src, dest, displayPath);
+    } else if (entry.name.endsWith('.md')) {
+      if (fs.existsSync(dest)) {
+        const srcContent = fs.readFileSync(src, 'utf8');
+        const destContent = fs.readFileSync(dest, 'utf8');
+        if (srcContent !== destContent) {
+          console.log(`  skip: ${displayPath} (customized, not overwriting)`);
+          continue;
+        }
+      }
+      fs.copyFileSync(src, dest);
+      console.log(`  + .claude/commands/${displayPath}`);
+    }
+  }
+}
+
 function uninstall() {
   const projectRoot = getProjectRoot();
   const commandsDir = path.join(projectRoot, '.claude', 'commands');
 
-  const skillFiles = ['ui-ralph.md', 'ui-ralph:spec.md', 'ui-ralph:gen.md', 'ui-ralph:verify.md'];
+  // Remove current version files
+  const filePath = path.join(commandsDir, 'ui-ralph.md');
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+    console.log('  - .claude/commands/ui-ralph.md');
+  }
 
-  for (const file of skillFiles) {
-    const filePath = path.join(commandsDir, file);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      console.log(`  - .claude/commands/${file}`);
+  const subDir = path.join(commandsDir, 'ui-ralph');
+  if (fs.existsSync(subDir)) {
+    fs.rmSync(subDir, { recursive: true });
+    console.log('  - .claude/commands/ui-ralph/');
+  }
+
+  // Remove legacy v0.1.0 files
+  const legacyFiles = ['ui-dev.md', 'ui-spec.md', 'ui-gen.md', 'ui-verify.md'];
+  for (const file of legacyFiles) {
+    const legacy = path.join(commandsDir, file);
+    if (fs.existsSync(legacy)) {
+      fs.unlinkSync(legacy);
+      console.log(`  - .claude/commands/${file} (legacy)`);
     }
   }
 
