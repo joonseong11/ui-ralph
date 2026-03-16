@@ -1,6 +1,6 @@
 {
   "name": "ui-ralph",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "AI agent skills that build UI from Figma/screenshot/text and iterate until all tests pass",
   "keywords": [
     "claude-code",
