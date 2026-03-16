@@ -1,0 +1,39 @@
+{
+  "name": "ui-ralph",
+  "version": "0.1.0",
+  "description": "AI agent skills that build UI from Figma/screenshot/text and iterate until all tests pass",
+  "keywords": [
+    "claude-code",
+    "figma",
+    "ui-automation",
+    "e2e-testing",
+    "playwright",
+    "visual-testing",
+    "ai-agent",
+    "codex"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joonseong11/ui-ralph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joonseong11/ui-ralph/issues"
+  },
+  "homepage": "https://github.com/joonseong11/ui-ralph#readme",
+  "license": "MIT",
+  "bin": {
+    "ui-ralph": "bin/setup.js"
+  },
+  "scripts": {
+    "postinstall": "ui-ralph install"
+  },
+  "files": [
+    "bin/",
+    "commands/",
+    "e2e/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
