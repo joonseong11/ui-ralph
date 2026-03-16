@@ -37,7 +37,8 @@ In Claude Code:
 # Individual stages
 /ui-ralph:spec    # Extract spec only → .ui-spec.json
 /ui-ralph:gen     # Generate code from spec
-/ui-ralph:verify  # Run verification only
+/ui-ralph:verify  # Run verification only (requires Playwright)
+/ui-ralph:clean   # Remove all artifacts
 ```
 
 ## Requirements
@@ -60,7 +61,7 @@ Input (Figma / text / image / component)
     ↓
 /ui-ralph:gen   →  Component code + E2E test
     ↓
-/ui-ralph:verify →  3-stage verification
+/ui-ralph:verify →  3-stage verification (optional, requires Playwright)
               ① Computed style check
               ② Layout bounding box check
               ③ AI vision comparison
@@ -79,7 +80,7 @@ Input (Figma / text / image / component)
 | `.ui-artifacts/verification-report.md` | Detailed verification results |
 | `.ui-artifacts/e2e-spec.ts` | Auto-generated E2E test |
 
-All artifacts are development-time only. Clean up with:
+All artifacts are development-time only. Clean up with `/ui-ralph:clean` or:
 
 ```bash
 rm -f .ui-spec.json && rm -rf .ui-artifacts/
