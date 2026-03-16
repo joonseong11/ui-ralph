@@ -2,7 +2,7 @@
 description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-spec.json 추출
 ---
 
-# /ui-spec — 디자인 스펙 추출
+# /ui-ralph:spec — 디자인 스펙 추출
 
 대화 컨텍스트에서 디자인 입력을 분석하여 `.ui-spec.json`을 생성한다.
 

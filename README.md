@@ -26,18 +26,18 @@ In Claude Code:
 
 ```
 # Full pipeline — auto-detects input from conversation context
-/ui-dev
+/ui-ralph
 
 # With Figma link
-[paste Figma URL] + /ui-dev
+[paste Figma URL] + /ui-ralph
 
 # With screenshot
-[paste image] + /ui-dev
+[paste image] + /ui-ralph
 
 # Individual stages
-/ui-spec    # Extract spec only → .ui-spec.json
-/ui-gen     # Generate code from spec
-/ui-verify  # Run verification only
+/ui-ralph:spec    # Extract spec only → .ui-spec.json
+/ui-ralph:gen     # Generate code from spec
+/ui-ralph:verify  # Run verification only
 ```
 
 ## Requirements
@@ -56,11 +56,11 @@ In Claude Code:
 ```
 Input (Figma / text / image / component)
     ↓
-/ui-spec  →  .ui-spec.json (design tokens, styles, layout)
+/ui-ralph:spec  →  .ui-spec.json (design tokens, styles, layout)
     ↓
-/ui-gen   →  Component code + E2E test
+/ui-ralph:gen   →  Component code + E2E test
     ↓
-/ui-verify →  3-stage verification
+/ui-ralph:verify →  3-stage verification
               ① Computed style check
               ② Layout bounding box check
               ③ AI vision comparison

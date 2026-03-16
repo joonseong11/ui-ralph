@@ -73,14 +73,14 @@ function install() {
     console.log(`  + e2e/playwright.config.ts`);
   }
 
-  console.log('\n✓ ui-ralph installed. Use /ui-dev in Claude Code to start.');
+  console.log('\n✓ ui-ralph installed. Use /ui-ralph in Claude Code to start.');
 }
 
 function uninstall() {
   const projectRoot = getProjectRoot();
   const commandsDir = path.join(projectRoot, '.claude', 'commands');
 
-  const skillFiles = ['ui-dev.md', 'ui-spec.md', 'ui-gen.md', 'ui-verify.md'];
+  const skillFiles = ['ui-ralph.md', 'ui-ralph:spec.md', 'ui-ralph:gen.md', 'ui-ralph:verify.md'];
 
   for (const file of skillFiles) {
     const filePath = path.join(commandsDir, file);

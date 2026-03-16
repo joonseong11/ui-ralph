@@ -2,13 +2,13 @@
 description: .ui-spec.json 기반으로 컴포넌트 코드 + E2E 테스트 자동 생성
 ---
 
-# /ui-gen — 코드 생성
+# /ui-ralph:gen — 코드 생성
 
 `.ui-spec.json`을 읽고 컴포넌트 코드와 E2E 테스트를 생성한다.
 
 ## 전제 조건
 
-프로젝트 루트에 `.ui-spec.json`이 존재해야 한다. 없으면 "/ui-spec을 먼저 실행해주세요."라고 안내한다.
+프로젝트 루트에 `.ui-spec.json`이 존재해야 한다. 없으면 "/ui-ralph:spec을 먼저 실행해주세요."라고 안내한다.
 
 ## 1. 스펙 로드
 
