@@ -167,6 +167,10 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
 - `layout` 필드는 선택적. 지정된 속성만 검증
 - `tolerance`는 element 레벨 또는 `verification` 레벨에서 설정. element 레벨이 우선
 
-## 7. 완료
+## 7. 진행 상태 업데이트
+
+`.ui-progress.json`이 존재하면 (`/ui-ralph` 오케스트레이터에서 호출된 경우) `stages.spec.status`를 `"done"`, `stages.spec.completedAt`을 현재 시각으로 업데이트한다.
+
+## 8. 완료
 
 생성된 `.ui-spec.json`의 elements 수와 주요 내용을 사용자에게 요약한다.

@@ -9,6 +9,7 @@ ui-ralph이 생성한 임시 파일을 모두 삭제한다.
 ## 삭제 대상
 
 - `.ui-spec.json` — 디자인 스펙
+- `.ui-progress.json` — 파이프라인 진행 상태
 - `.ui-artifacts/` — 스크린샷, 검증 리포트, E2E 테스트
 
 ## 실행
@@ -16,7 +17,7 @@ ui-ralph이 생성한 임시 파일을 모두 삭제한다.
 Bash 도구로 삭제한다:
 
 ```bash
-rm -f .ui-spec.json && rm -rf .ui-artifacts/
+rm -f .ui-spec.json .ui-progress.json && rm -rf .ui-artifacts/
 ```
 
 삭제 후 결과를 알린다:
