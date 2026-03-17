@@ -37,6 +37,7 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
 3. Figma MCP `get_screenshot` 도구로 디자인 스크린샷을 캡처한다
 4. 스크린샷을 `.ui-artifacts/design-ref.png`로 저장한다
 5. 디자인 정보에서 스타일과 레이아웃을 추출하여 elements 배열을 구성한다
+6. **에셋 추출** — 디자인에서 이미지/아이콘 요소를 식별하고 파일로 추출한다 (아래 "Figma 에셋 추출" 참조)
 
 **스타일 추출 규칙:**
 - 색상: Figma의 fill/stroke를 `rgba(r, g, b, a)` 또는 `rgb(r, g, b)` 형식으로 변환
@@ -64,6 +65,33 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
 2. 프로젝트의 `tailwind.config.ts`가 있으면 읽어 디자인 토큰을 참조한다
 3. 추정값으로 elements 배열을 구성한다
 4. `meta.designScreenshot`은 `null`로 설정한다 (AI 비전 검증 스킵)
+
+## 3-1. Figma 에셋 추출 (Figma 모드 전용)
+
+디자인에 포함된 이미지/아이콘 요소를 식별하여 파일로 추출한다.
+
+**에셋 분류 기준:**
+
+| 조건 | 형식 | 예시 |
+|------|------|------|
+| 벡터 그래픽, 아이콘 크기 (약 48×48 이하) | SVG | 아이콘, 로고 심볼, 화살표 등 |
+| 사진, 복잡한 일러스트, 중간 이상 크기 | PNG | 배경 이미지, 히어로 이미지, 썸네일 등 |
+
+**추출 절차:**
+
+1. `get_design_context` 결과에서 이미지/아이콘으로 보이는 자식 노드를 식별한다
+2. 각 에셋 노드에 대해:
+   - **SVG 추출**: 해당 노드 ID로 `get_design_context`를 호출하여 반환된 코드에서 SVG 마크업을 추출한다. SVG 코드가 있으면 Write 도구로 `.svg` 파일을 저장한다.
+   - **PNG 추출**: 해당 노드 ID로 `get_screenshot`을 호출하여 이미지를 캡처한다. Bash 도구를 사용하여 파일로 저장한다.
+3. 저장 위치는 프로젝트 구조에 맞게 결정한다:
+   - `public/` 디렉토리가 있으면 → `public/images/`, `public/icons/`
+   - `src/assets/`가 있으면 → `src/assets/images/`, `src/assets/icons/`
+   - 없으면 → `.ui-artifacts/assets/`에 임시 저장하고 사용자에게 위치를 확인한다
+4. 추출된 에셋 정보를 `.ui-spec.json`의 `assets` 배열에 기록한다
+
+**주의사항:**
+- SVG 추출이 불가능한 경우 (벡터 데이터가 없는 경우) PNG로 대체한다
+- 에셋이 없는 디자인이면 `assets` 배열을 빈 배열 `[]`로 설정한다
 
 ## 4. 컴포넌트 정보 결정
 
@@ -97,6 +125,15 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
     "targetPath": "src/.../Component.tsx",
     "description": "설명"
   },
+  "assets": [
+    {
+      "nodeId": "Figma 노드 ID",
+      "name": "파일명 (확장자 제외)",
+      "format": "svg | png",
+      "targetPath": "public/icons/icon-name.svg",
+      "description": "에셋 설명"
+    }
+  ],
   "elements": [
     {
       "id": "camelCase 식별자",
