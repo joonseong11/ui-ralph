@@ -124,11 +124,35 @@
 - `commands/ui-ralph/clean.md`
 - `e2e/playwright.config.ts`
 
+### UIR-010 Verification Cannot False-Pass
+
+기준:
+- `PASS`는 필요한 검증이 모두 실제 실행된 경우에만 허용된다
+- Playwright skipped tests, 0건 실행, 누락된 AI 비전 리뷰는 `UNVERIFIED`여야 한다
+- Figma/screenshot 입력에서 스크린샷 비교가 실행되지 않았는데 "검증 통과"라고 하면 실패다
+- 검증 리포트의 `최종 결과`를 읽지 않고 요약만으로 PASS 처리하면 실패다
+
+확인 포인트:
+- `commands/ui-ralph.md`
+- `commands/ui-ralph/verify.md`
+- `README.md`
+
+### UIR-011 Verification Route Must Be Concrete
+
+기준:
+- `verification.route`는 실제로 여는 구체 URL이어야 한다
+- `[id]`, `:id`, `{id}` 같은 미해결 동적 세그먼트가 남아 있으면 실패다
+- 구체 URL을 모르면 Stage 1에서 사용자 확인을 받아야 한다
+
+확인 포인트:
+- `commands/ui-ralph/spec.md`
+- `commands/ui-ralph/verify.md`
+
 ## 최소 자기검토 절차
 
 1. 변경한 파일을 다시 읽는다
 2. 가능하면 `npm run maintainer:check`를 실행한다
-3. 위 9개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
+3. 위 11개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
 4. 스크립트가 잡지 못하는 의미적 리스크가 없는지 추가로 읽는다
 5. `FAIL` 또는 `UNVERIFIED`가 있으면 최종 응답에서 숨기지 않는다
 
@@ -141,6 +165,8 @@ rg -n "Playwright 설치 여부와 관계없이|선택 사항이 아니다|ERROR
 rg -n "수동 검증|대체 수단|누락된 Stage" commands/ui-ralph.md commands/ui-ralph/verify.md
 rg -n "get_metadata|OUTPUT TRUNCATED|sourceNodeId|모호하면" commands/ui-ralph/spec.md commands/ui-ralph.md
 rg -n "e2e/.ui-spec.json|e2e/.ui-artifacts|e2e/.ui-progress.json|e2e/test-results|outputDir: './test-results'" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md e2e/playwright.config.ts
+rg -n "UNVERIFIED|0건|skip되었|AI 비전 리뷰 미실행|required check" commands/ui-ralph.md commands/ui-ralph/verify.md README.md
+rg -n "verification.route|\\[id\\]|:id|\\{id\\}|구체 URL" commands/ui-ralph/spec.md commands/ui-ralph/verify.md
 ```
 
 ## 최종 보고 형식
@@ -158,4 +184,6 @@ Self-review
 - UIR-007: PASS
 - UIR-008: PASS
 - UIR-009: PASS
+- UIR-010: PASS
+- UIR-011: PASS
 ```

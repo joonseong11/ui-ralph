@@ -47,9 +47,10 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 4. root node가 크거나 섹션이 많으면, `get_metadata` 결과를 기준으로 header, content, card list, footer 같은 하위 섹션 node로 분해한 뒤 `get_design_context`를 **순차적으로** 호출한다
 5. Figma MCP `get_screenshot` 도구로 root 디자인 스크린샷을 캡처하고 `e2e/.ui-artifacts/design-ref.png`로 저장한다
 6. 어떤 `get_design_context` 응답이든 `[OUTPUT TRUNCATED]`, 과도한 대형 응답 경고, 또는 명백한 누락이 보이면 그 응답을 버리고 더 작은 하위 node들로 재조회한다. 불완전한 응답으로는 `e2e/.ui-spec.json`을 쓰지 않는다
-7. 검증된 디자인 정보에서 스타일과 레이아웃을 추출하여 elements 배열을 구성한다. `get_metadata`는 분해용으로만 쓰고, 최종 값 확정에는 사용하지 않는다
-8. Figma 유래 element에는 가능한 한 `sourceNodeId`를 기록하여 후속 재조회와 검증에 사용한다
-9. **에셋 추출** — 디자인에서 이미지/아이콘 요소를 식별하고 파일로 추출한다 (아래 "Figma 에셋 추출" 참조)
+7. root 디자인 스크린샷을 확보하지 못하면 Stage 1을 완료하지 않는다. Figma 입력에서 `meta.designScreenshot`은 필수다
+8. 검증된 디자인 정보에서 스타일과 레이아웃을 추출하여 elements 배열을 구성한다. `get_metadata`는 분해용으로만 쓰고, 최종 값 확정에는 사용하지 않는다
+9. Figma 유래 element에는 가능한 한 `sourceNodeId`를 기록하여 후속 재조회와 검증에 사용한다
+10. **에셋 추출** — 디자인에서 이미지/아이콘 요소를 식별하고 파일로 추출한다 (아래 "Figma 에셋 추출" 참조)
 
 **스타일 추출 규칙:**
 - 색상: Figma의 fill/stroke를 `rgba(r, g, b, a)` 또는 `rgb(r, g, b)` 형식으로 변환
@@ -62,8 +63,9 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 1. 첨부된 이미지를 `e2e/.ui-artifacts/design-ref.png`로 복사한다
 2. 이미지를 분석하여 색상, 레이아웃, 폰트 크기 등을 추정한다
 3. 프로젝트의 `tailwind.config.ts`가 있으면 읽어 디자인 토큰과 매칭한다
-4. 이미지 분석만으로 확정할 수 없는 구조, 상태, 간격, 타이포그래피가 있으면 사용자에게 확인한다
-5. 확인된 값으로만 elements 배열을 구성한다
+4. 원본 이미지를 확보하지 못하면 Stage 1을 완료하지 않는다. screenshot 입력에서 `meta.designScreenshot`은 필수다
+5. 이미지 분석만으로 확정할 수 없는 구조, 상태, 간격, 타이포그래피가 있으면 사용자에게 확인한다
+6. 확인된 값으로만 elements 배열을 구성한다
 
 ### Modify 모드
 
@@ -116,7 +118,9 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 
 ## 5. 검증 설정
 
-- `verification.route`: 컴포넌트가 렌더링되는 페이지의 URL 경로. `targetPath`의 app router 구조에서 추론하되, 확실하지 않으면 사용자에게 질문한다.
+- `verification.route`: 컴포넌트가 실제로 렌더링되는 **구체 URL 경로**. `targetPath`의 app router 구조에서 추론하되, 확실하지 않으면 사용자에게 질문한다.
+- `verification.route`에는 `[id]`, `:id`, `{id}` 같은 미해결 동적 세그먼트를 남기면 안 된다. 이런 값이 남아 있으면 Stage 1을 완료하지 않는다
+- 동적 라우트가 필요한데 구체 URL을 모르면 사용자에게 예시 URL을 받아 확정한다
 - `verification.baseURL`: 기본값 `http://localhost:3000`
 - `verification.viewport`: 기본값 `{ "width": 375, "height": 812 }`
 

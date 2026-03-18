@@ -61,13 +61,16 @@ Input (Figma / text / image / component)
     ↓
 /ui-ralph:gen   →  Component code + E2E test
     ↓
-/ui-ralph:verify →  3-stage verification (mandatory; missing Playwright becomes ERROR report)
+/ui-ralph:verify →  3-stage verification (mandatory; incomplete coverage becomes UNVERIFIED)
               ① Computed style check
               ② Layout bounding box check
               ③ AI vision comparison
     ↓
   PASS? → Done
   FAIL? → Auto-fix → Re-verify (max 3 attempts)
+  UNVERIFIED? → fix route/design source → Re-verify
+
+Full PASS means the required checks actually ran. A skipped screenshot comparison or skipped Playwright coverage is not a PASS.
 ```
 
 ### Artifacts (temporary, auto-cleaned)

@@ -66,7 +66,7 @@ case_uir_002() {
 case_uir_003() {
   check_has 'Playwright 설치 여부와 관계없이 **반드시** `/ui-ralph:verify` 스킬의 절차를 실행한다.' commands/ui-ralph.md &&
     check_has "이 단계는 선택 사항이 아니다." commands/ui-ralph/verify.md &&
-    check_has "mandatory; missing Playwright becomes ERROR report" README.md
+    check_has "mandatory; incomplete coverage becomes UNVERIFIED" README.md
 }
 
 case_uir_004() {
@@ -96,7 +96,7 @@ case_uir_007() {
 
 case_uir_008() {
   check_has "always writes verification report" README.md &&
-    check_has "mandatory; missing Playwright becomes ERROR report" README.md &&
+    check_has "mandatory; incomplete coverage becomes UNVERIFIED" README.md &&
     check_has "선택 사항이 아니다." commands/ui-ralph/verify.md &&
     ! check_regex "optional, requires Playwright" README.md commands/ui-ralph.md commands/ui-ralph/verify.md
 }
@@ -107,6 +107,20 @@ case_uir_009() {
     check_has "e2e/.ui-progress.json" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md &&
     check_has "e2e/test-results" README.md commands/ui-ralph/clean.md &&
     check_has "outputDir: './test-results'" e2e/playwright.config.ts
+}
+
+case_uir_010() {
+  check_has '결과가 `UNVERIFIED`이면 완료로 간주하지 않는다' commands/ui-ralph.md &&
+    check_has '`UNVERIFIED`: 필요한 검증이 skip되었거나' commands/ui-ralph/verify.md &&
+    check_has 'style/layout 검증이 0건이거나 required test가 skip되면 최종 결과는 `UNVERIFIED`다' commands/ui-ralph/verify.md &&
+    check_has "incomplete coverage becomes UNVERIFIED" README.md &&
+    check_has '검증 리포트를 읽고 `최종 결과: PASS | FAIL | ERROR | UNVERIFIED`를 반드시 확인한 뒤 최종 결과를 판단한다' commands/ui-ralph.md
+}
+
+case_uir_011() {
+  check_has '`verification.route`: 컴포넌트가 실제로 렌더링되는 **구체 URL 경로**.' commands/ui-ralph/spec.md &&
+    check_has '`verification.route`에는 `[id]`, `:id`, `{id}` 같은 미해결 동적 세그먼트를 남기면 안 된다.' commands/ui-ralph/spec.md &&
+    check_has "구체 URL을 모르면 사용자에게 예시 URL을 받아 확정한다" commands/ui-ralph/spec.md
 }
 
 echo "ui-ralph maintainer checks"
@@ -120,6 +134,8 @@ run_case "UIR-006" case_uir_006
 run_case "UIR-007" case_uir_007
 run_case "UIR-008" case_uir_008
 run_case "UIR-009" case_uir_009
+run_case "UIR-010" case_uir_010
+run_case "UIR-011" case_uir_011
 
 echo "Summary: $pass_count passed, $fail_count failed"
 

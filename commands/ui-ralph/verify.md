@@ -8,6 +8,14 @@ description: e2e/.ui-spec.json 기준으로 구현 결과를 3단계 검증 (스
 
 이 단계는 선택 사항이 아니다. Playwright 설치 여부와 관계없이 반드시 실행하며, 어떤 경우에도 `e2e/.ui-artifacts/verification-report.md`를 남겨야 한다.
 
+## 판정 원칙
+
+- `PASS`: 필요한 검증 차원이 모두 실제로 실행되었고 통과한 경우에만 사용한다
+- `FAIL`: 필요한 검증은 실행되었지만 결과가 스펙과 다를 때 사용한다
+- `ERROR`: 검증 실행 자체가 실패했을 때 사용한다
+- `UNVERIFIED`: 필요한 검증이 skip되었거나, 입력/경로/스크린샷 부족으로 완전한 검증이 불가능할 때 사용한다
+- `UNVERIFIED`를 `PASS`처럼 요약하거나 "스크린샷 비교까지 통과"라고 표현하면 안 된다
+
 ## 전제 조건
 
 **반드시** 다음 명령을 Bash 도구로 실행하여 필수 파일 존재를 확인한다:
@@ -53,8 +61,11 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 
 테스트 결과를 파싱하여:
 - 각 테스트의 PASS/FAIL 상태 확인
+- 각 테스트의 SKIP 상태 확인
 - FAIL인 테스트의 console.log 출력에서 실패 상세 추출
 - 실행 자체가 실패한 경우: 에러 메시지를 그대로 리포트에 기록
+- 스타일/레이아웃 검증이 실제로 몇 건 실행되었는지 집계한다
+- style/layout 검증이 0건이거나 required test가 skip되면 최종 결과는 `UNVERIFIED`다
 
 ## 2. Stage 3: AI 비전 리뷰
 
@@ -65,10 +76,12 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 2. `e2e/.ui-artifacts/design-ref.png`를 Read 도구로 읽는다
 3. 두 이미지를 비교하여 시각적 차이점을 분석한다
 4. 차이점을 목록으로 작성한다
+5. 둘 중 하나라도 파일이 없으면 최종 결과는 `UNVERIFIED`다
 
 **designScreenshot이 null인 경우:**
-- Stage 3을 스킵한다
-- Stage 1+2 결과만으로 최종 판정
+- `meta.source`가 `figma` 또는 `screenshot`이면 최종 결과는 `UNVERIFIED`다
+- `meta.source`가 `text` 또는 `modify`이면 AI 비전 리뷰를 `N/A`로 기록한다
+- 어떤 경우에도 "AI 비전 통과"라고 쓰지 않는다
 
 ## 3. 검증 리포트 생성
 
@@ -97,8 +110,14 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 |------|------|------|------|------|------|
 | {element.id} | {property} | {expected} | {actual} | {diff} | ✓/✗ |
 
-## AI 비전 리뷰 — {PASS/FAIL/SKIP}
+## AI 비전 리뷰 — {PASS/FAIL/SKIP/N/A}
 {차이점이 있으면 목록으로 작성}
+
+## 검증 완전성
+- Style/Layout 실행 건수: {실행 수}
+- Playwright skipped tests: {건수}
+- AI 비전 필요 여부: {required | optional | n/a}
+- 완전성 판정: {complete | incomplete}
 
 ## 에러 로그
 {Playwright 실행 중 에러가 발생했으면 에러 메시지를 여기에 기록. 정상 실행이면 "없음"}
@@ -106,18 +125,26 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 ## 수정 이력
 {/ui-ralph 오케스트레이터에서 호출된 경우에만 기록. 독립 실행 시 이 섹션은 비어있음}
 
-최종 결과: {PASS/FAIL/ERROR}
+최종 결과: {PASS/FAIL/ERROR/UNVERIFIED}
 ```
 
 **ERROR 상태:** Playwright 실행 자체가 실패한 경우 (타임아웃, 컴파일 에러 등). 각 검증 섹션을 "ERROR"로 표시하고 에러 로그에 상세 내용을 기록한다.
+
+**UNVERIFIED 상태:**
+- Playwright tests가 skip되었거나 스타일/레이아웃 검증이 0건 실행된 경우
+- `verification.route`가 실제로 렌더 가능한 구체 URL이 아니었던 경우
+- `meta.source`가 `figma` 또는 `screenshot`인데 `designScreenshot`이 없어서 AI 비전 리뷰를 수행하지 못한 경우
+- AI 비전 리뷰가 required인데 `e2e/.ui-artifacts/design-ref.png` 또는 `e2e/.ui-artifacts/impl-screenshot.png`가 없었던 경우
+- 위 조건 중 하나라도 있으면 "검증 통과"라고 표현하지 않는다
 
 ## 4. 결과 판정 및 출력
 
 **리포트 파일 경로를 반드시 사용자에게 알린다.**
 
-- **전체 PASS:** "✓ 검증 통과. 리포트: e2e/.ui-artifacts/verification-report.md" 출력
+- **전체 PASS:** 모든 required check가 실행되어 통과했을 때만 "✓ 검증 통과. 리포트: e2e/.ui-artifacts/verification-report.md" 출력
 - **FAIL:** 실패 항목을 요약하여 출력. 실패 원인과 수정 방향 제안
 - **ERROR:** 실행 에러를 요약하고 해결 방법을 제안
+- **UNVERIFIED:** 누락된 검증 조건을 요약하고 "△ 검증 불충분. 리포트: e2e/.ui-artifacts/verification-report.md" 출력
 
 **진행 상태 업데이트:** `e2e/.ui-progress.json`이 존재하면 (`/ui-ralph` 오케스트레이터에서 호출된 경우) `stages.verify.status`를 `"done"`, `stages.verify.completedAt`을 현재 시각으로 업데이트한다.
 
@@ -135,4 +162,12 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 ✗ 검증 실행 에러. 리포트: e2e/.ui-artifacts/verification-report.md
   - 원인: Playwright 테스트 타임아웃 (dev server 시작 실패)
   - 해결: dev server가 정상 실행되는지 확인 후 /ui-ralph:verify로 재시도
+```
+
+**UNVERIFIED 출력 예시:**
+```
+△ 검증 불충분. 리포트: e2e/.ui-artifacts/verification-report.md
+  - AI 비전 리뷰 미실행: figma 입력인데 designScreenshot이 없음
+  - Playwright skipped tests: 2건
+  - 해결: 구체 verification.route와 designScreenshot을 확보한 뒤 /ui-ralph:verify 재실행
 ```
