@@ -123,6 +123,13 @@ case_uir_011() {
     check_has "구체 URL을 모르면 사용자에게 예시 URL을 받아 확정한다" commands/ui-ralph/spec.md
 }
 
+case_uir_012() {
+  check_has "페이지 수가 많거나, 수정 파일이 많거나, 공유 컴포넌트가 많거나, 멀티페이지 작업이라는 이유로 파이프라인을 우회하지 않는다" commands/ui-ralph.md &&
+    check_has '`ui-ralph`는 단일 컴포넌트 전용이 아니다' commands/ui-ralph.md &&
+    check_has "규모가 크면 입력을 나누어 순차 처리해야지, spec/gen/verify를 생략하면 안 된다" commands/ui-ralph.md &&
+    check_has "멀티페이지라는 이유로 Stage 1을 생략하지 않는다" commands/ui-ralph.md
+}
+
 echo "ui-ralph maintainer checks"
 
 run_case "UIR-001" case_uir_001
@@ -136,6 +143,7 @@ run_case "UIR-008" case_uir_008
 run_case "UIR-009" case_uir_009
 run_case "UIR-010" case_uir_010
 run_case "UIR-011" case_uir_011
+run_case "UIR-012" case_uir_012
 
 echo "Summary: $pass_count passed, $fail_count failed"
 

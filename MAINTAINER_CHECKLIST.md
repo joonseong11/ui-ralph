@@ -148,11 +148,21 @@
 - `commands/ui-ralph/spec.md`
 - `commands/ui-ralph/verify.md`
 
+### UIR-012 Multi-Page Work Cannot Bypass Pipeline
+
+기준:
+- 멀티페이지, 복합 플로우, 공유 컴포넌트, 수정 파일 수는 `/ui-ralph` 우회 사유가 아니다
+- 규모가 크면 입력을 나누어 순차 처리해야 한다
+- "이 태스크는 ui-ralph에 맞지 않는다"며 spec/gen/verify 없이 직접 구현하면 실패다
+
+확인 포인트:
+- `commands/ui-ralph.md`
+
 ## 최소 자기검토 절차
 
 1. 변경한 파일을 다시 읽는다
 2. 가능하면 `npm run maintainer:check`를 실행한다
-3. 위 11개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
+3. 위 12개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
 4. 스크립트가 잡지 못하는 의미적 리스크가 없는지 추가로 읽는다
 5. `FAIL` 또는 `UNVERIFIED`가 있으면 최종 응답에서 숨기지 않는다
 
@@ -167,6 +177,7 @@ rg -n "get_metadata|OUTPUT TRUNCATED|sourceNodeId|모호하면" commands/ui-ralp
 rg -n "e2e/.ui-spec.json|e2e/.ui-artifacts|e2e/.ui-progress.json|e2e/test-results|outputDir: './test-results'" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md e2e/playwright.config.ts
 rg -n "UNVERIFIED|0건|skip되었|AI 비전 리뷰 미실행|required check" commands/ui-ralph.md commands/ui-ralph/verify.md README.md
 rg -n "verification.route|\\[id\\]|:id|\\{id\\}|구체 URL" commands/ui-ralph/spec.md commands/ui-ralph/verify.md
+rg -n "단일 컴포넌트 전용이 아니다|멀티페이지|공유 컴포넌트|우회하지 않는다|입력을 나누어 순차 처리" commands/ui-ralph.md
 ```
 
 ## 최종 보고 형식
@@ -186,4 +197,5 @@ Self-review
 - UIR-009: PASS
 - UIR-010: PASS
 - UIR-011: PASS
+- UIR-012: PASS
 ```
