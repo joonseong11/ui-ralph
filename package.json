@@ -25,12 +25,15 @@
     "ui-ralph": "bin/setup.js"
   },
   "scripts": {
+    "maintainer:check": "sh ./scripts/maintainer-check.sh",
     "postinstall": "ui-ralph install"
   },
   "files": [
     "bin/",
     "commands/",
     "e2e/",
+    "scripts/",
+    "MAINTAINER_CHECKLIST.md",
     "README.md"
   ],
   "engines": {

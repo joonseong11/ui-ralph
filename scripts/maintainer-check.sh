@@ -1,0 +1,128 @@
+#!/bin/sh
+
+set -eu
+
+ROOT_DIR=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+cd "$ROOT_DIR"
+
+if ! command -v rg >/dev/null 2>&1; then
+  echo "UNVERIFIED: rg is required for maintainer checks"
+  exit 2
+fi
+
+pass_count=0
+fail_count=0
+
+check_has() {
+  pattern=$1
+  shift
+  rg -n --fixed-strings "$pattern" "$@" >/dev/null 2>&1
+}
+
+check_regex() {
+  pattern=$1
+  shift
+  rg -n "$pattern" "$@" >/dev/null 2>&1
+}
+
+report() {
+  case_id=$1
+  status=$2
+  message=$3
+
+  echo "$case_id: $status - $message"
+
+  if [ "$status" = "PASS" ]; then
+    pass_count=$((pass_count + 1))
+  else
+    fail_count=$((fail_count + 1))
+  fi
+}
+
+run_case() {
+  case_id=$1
+  shift
+  if "$@"; then
+    report "$case_id" "PASS" "check passed"
+  else
+    report "$case_id" "FAIL" "check failed"
+  fi
+}
+
+case_uir_001() {
+  check_has "spec → gen → verify" commands/ui-ralph.md &&
+    check_has "검증(Stage 3)을 실행하지 않고" commands/ui-ralph.md &&
+    check_has "### Stage 3: 검증 (필수)" commands/ui-ralph.md
+}
+
+case_uir_002() {
+  check_has "e2e/.ui-spec.json exists" commands/ui-ralph.md &&
+    check_has "e2e/.ui-artifacts/e2e-spec.ts" commands/ui-ralph.md commands/ui-ralph/verify.md &&
+    check_has "verification report exists" commands/ui-ralph.md &&
+    check_has "e2e/.ui-spec.json" commands/ui-ralph/gen.md &&
+    check_has "e2e/" commands/ui-ralph.md
+}
+
+case_uir_003() {
+  check_has 'Playwright 설치 여부와 관계없이 **반드시** `/ui-ralph:verify` 스킬의 절차를 실행한다.' commands/ui-ralph.md &&
+    check_has "이 단계는 선택 사항이 아니다." commands/ui-ralph/verify.md &&
+    check_has "mandatory; missing Playwright becomes ERROR report" README.md
+}
+
+case_uir_004() {
+  check_has "수동 검증은 자동 검증의 대체 수단이 아니다." commands/ui-ralph.md &&
+    check_has "수동 검증을 완료 대안으로 제안하지 않는다" commands/ui-ralph/verify.md &&
+    check_has '"/ui-ralph:spec을 먼저 실행해주세요."' commands/ui-ralph/verify.md &&
+    check_has '"/ui-ralph:gen을 먼저 실행해주세요."' commands/ui-ralph/verify.md
+}
+
+case_uir_005() {
+  check_has "get_metadata" commands/ui-ralph/spec.md &&
+    check_has "[OUTPUT TRUNCATED]" commands/ui-ralph/spec.md &&
+    check_has "더 작은 하위 node들로 재조회" commands/ui-ralph/spec.md
+}
+
+case_uir_006() {
+  check_has "이미지 분석만으로 확정할 수 없는" commands/ui-ralph/spec.md &&
+    check_has "구현에 필요한 디테일이 모호하면 사용자에게 질문한다" commands/ui-ralph/spec.md &&
+    check_has "screenshot/text 모드에서 구현에 필요한 정보가 모호하면 질문하고 멈춘다." commands/ui-ralph/spec.md
+}
+
+case_uir_007() {
+  check_has "source of truth" commands/ui-ralph/spec.md &&
+    check_has "sourceNodeId" commands/ui-ralph/spec.md &&
+    check_has "실패 원인이 구현 문제인지, \`e2e/.ui-spec.json\`의 불완전/모호성인지 먼저 구분한다" commands/ui-ralph.md
+}
+
+case_uir_008() {
+  check_has "always writes verification report" README.md &&
+    check_has "mandatory; missing Playwright becomes ERROR report" README.md &&
+    check_has "선택 사항이 아니다." commands/ui-ralph/verify.md &&
+    ! check_regex "optional, requires Playwright" README.md commands/ui-ralph.md commands/ui-ralph/verify.md
+}
+
+case_uir_009() {
+  check_has "e2e/.ui-spec.json" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md &&
+    check_has "e2e/.ui-artifacts" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md &&
+    check_has "e2e/.ui-progress.json" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md &&
+    check_has "e2e/test-results" README.md commands/ui-ralph/clean.md &&
+    check_has "outputDir: './test-results'" e2e/playwright.config.ts
+}
+
+echo "ui-ralph maintainer checks"
+
+run_case "UIR-001" case_uir_001
+run_case "UIR-002" case_uir_002
+run_case "UIR-003" case_uir_003
+run_case "UIR-004" case_uir_004
+run_case "UIR-005" case_uir_005
+run_case "UIR-006" case_uir_006
+run_case "UIR-007" case_uir_007
+run_case "UIR-008" case_uir_008
+run_case "UIR-009" case_uir_009
+
+echo "Summary: $pass_count passed, $fail_count failed"
+
+if [ "$fail_count" -ne 0 ]; then
+  exit 1
+fi

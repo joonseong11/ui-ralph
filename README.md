@@ -35,9 +35,9 @@ In Claude Code:
 [paste image] + /ui-ralph
 
 # Individual stages
-/ui-ralph:spec    # Extract spec only → .ui-spec.json
+/ui-ralph:spec    # Extract spec only → e2e/.ui-spec.json
 /ui-ralph:gen     # Generate code from spec
-/ui-ralph:verify  # Run verification only (requires Playwright)
+/ui-ralph:verify  # Run verification only (always writes verification report)
 /ui-ralph:clean   # Remove all artifacts
 ```
 
@@ -57,11 +57,11 @@ In Claude Code:
 ```
 Input (Figma / text / image / component)
     ↓
-/ui-ralph:spec  →  .ui-spec.json (design tokens, styles, layout)
+/ui-ralph:spec  →  e2e/.ui-spec.json (design tokens, styles, layout)
     ↓
 /ui-ralph:gen   →  Component code + E2E test
     ↓
-/ui-ralph:verify →  3-stage verification (optional, requires Playwright)
+/ui-ralph:verify →  3-stage verification (mandatory; missing Playwright becomes ERROR report)
               ① Computed style check
               ② Layout bounding box check
               ③ AI vision comparison
@@ -74,16 +74,18 @@ Input (Figma / text / image / component)
 
 | File | Purpose |
 |------|---------|
-| `.ui-spec.json` | Design spec — source of truth for verification |
-| `.ui-artifacts/design-ref.png` | Reference screenshot from design |
-| `.ui-artifacts/impl-screenshot.png` | Screenshot of implementation |
-| `.ui-artifacts/verification-report.md` | Detailed verification results |
-| `.ui-artifacts/e2e-spec.ts` | Auto-generated E2E test |
+| `e2e/.ui-spec.json` | Design spec — source of truth for verification |
+| `e2e/.ui-progress.json` | Pipeline progress checkpoint |
+| `e2e/.ui-artifacts/design-ref.png` | Reference screenshot from design |
+| `e2e/.ui-artifacts/impl-screenshot.png` | Screenshot of implementation |
+| `e2e/.ui-artifacts/verification-report.md` | Detailed verification results |
+| `e2e/.ui-artifacts/e2e-spec.ts` | Auto-generated E2E test |
+| `e2e/test-results/` | Playwright output directory |
 
 All artifacts are development-time only. Clean up with `/ui-ralph:clean` or:
 
 ```bash
-rm -f .ui-spec.json && rm -rf .ui-artifacts/
+rm -f e2e/.ui-spec.json e2e/.ui-progress.json .ui-spec.json .ui-progress.json && rm -rf e2e/.ui-artifacts/ e2e/test-results/ .ui-artifacts/ test-results/
 ```
 
 ## Uninstall

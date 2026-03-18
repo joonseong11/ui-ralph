@@ -1,14 +1,23 @@
 ---
-description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-spec.json 추출
+description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/.ui-spec.json 추출
 ---
 
 # /ui-ralph:spec — 디자인 스펙 추출
 
-대화 컨텍스트에서 디자인 입력을 분석하여 `.ui-spec.json`을 생성한다.
+대화 컨텍스트에서 디자인 입력을 분석하여 `e2e/.ui-spec.json`을 생성한다.
+
+## 정확도 우선 원칙
+
+- `e2e/.ui-spec.json`은 요약 메모가 아니라 구현과 검증의 source of truth다. 확인된 값만 기록한다
+- 사용자가 요청한 디자인과 일치하는 것이 최우선이다. 불완전한 입력이나 모호한 디테일을 추측으로 채우지 않는다
+- Figma 모드에서 `get_metadata`는 구조 분해와 node 탐색용으로만 사용한다. 최종 스타일/레이아웃 값은 `get_design_context` 또는 `get_screenshot`에서 확인된 정보로만 확정한다
+- Figma MCP 응답이 `[OUTPUT TRUNCATED]`, 과도한 대형 응답 경고, 또는 명백한 불완전 상태라면 해당 node는 신뢰하지 않는다. 더 작은 하위 node를 다시 조회한 뒤에만 spec을 확정한다
+- screenshot/text 모드에서 구현에 필요한 정보가 모호하면 질문하고 멈춘다. 확정되지 않은 값으로 `e2e/.ui-spec.json`을 쓰지 않는다
+- `ui-ralph` 임시 산출물은 모두 `e2e/` 하위에 둔다. 프로젝트 루트에 `.ui-spec.json`이나 `.ui-artifacts/`를 만들지 않는다
 
 ## 1. 사전 준비
 
-`.ui-artifacts/` 디렉토리가 없으면 생성한다.
+`e2e/.ui-artifacts/` 디렉토리가 없으면 생성한다.
 
 ## 2. 진입점 감지
 
@@ -33,11 +42,14 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
 1. URL에서 fileKey와 nodeId를 파싱한다
    - `figma.com/design/:fileKey/:fileName?node-id=:nodeId` → nodeId의 "-"를 ":"로 변환
    - `figma.com/design/:fileKey/branch/:branchKey/:fileName` → branchKey를 fileKey로 사용
-2. Figma MCP `get_design_context` 도구로 디자인 정보를 가져온다
-3. Figma MCP `get_screenshot` 도구로 디자인 스크린샷을 캡처한다
-4. 스크린샷을 `.ui-artifacts/design-ref.png`로 저장한다
-5. 디자인 정보에서 스타일과 레이아웃을 추출하여 elements 배열을 구성한다
-6. **에셋 추출** — 디자인에서 이미지/아이콘 요소를 식별하고 파일로 추출한다 (아래 "Figma 에셋 추출" 참조)
+2. Figma MCP `get_metadata`로 먼저 상위 구조를 확인한다
+3. root node가 작고 응답이 안정적이면 root에 대해 `get_design_context`를 호출한다
+4. root node가 크거나 섹션이 많으면, `get_metadata` 결과를 기준으로 header, content, card list, footer 같은 하위 섹션 node로 분해한 뒤 `get_design_context`를 **순차적으로** 호출한다
+5. Figma MCP `get_screenshot` 도구로 root 디자인 스크린샷을 캡처하고 `e2e/.ui-artifacts/design-ref.png`로 저장한다
+6. 어떤 `get_design_context` 응답이든 `[OUTPUT TRUNCATED]`, 과도한 대형 응답 경고, 또는 명백한 누락이 보이면 그 응답을 버리고 더 작은 하위 node들로 재조회한다. 불완전한 응답으로는 `e2e/.ui-spec.json`을 쓰지 않는다
+7. 검증된 디자인 정보에서 스타일과 레이아웃을 추출하여 elements 배열을 구성한다. `get_metadata`는 분해용으로만 쓰고, 최종 값 확정에는 사용하지 않는다
+8. Figma 유래 element에는 가능한 한 `sourceNodeId`를 기록하여 후속 재조회와 검증에 사용한다
+9. **에셋 추출** — 디자인에서 이미지/아이콘 요소를 식별하고 파일로 추출한다 (아래 "Figma 에셋 추출" 참조)
 
 **스타일 추출 규칙:**
 - 색상: Figma의 fill/stroke를 `rgba(r, g, b, a)` 또는 `rgb(r, g, b)` 형식으로 변환
@@ -47,15 +59,16 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
 
 ### Screenshot 모드
 
-1. 첨부된 이미지를 `.ui-artifacts/design-ref.png`로 복사한다
+1. 첨부된 이미지를 `e2e/.ui-artifacts/design-ref.png`로 복사한다
 2. 이미지를 분석하여 색상, 레이아웃, 폰트 크기 등을 추정한다
 3. 프로젝트의 `tailwind.config.ts`가 있으면 읽어 디자인 토큰과 매칭한다
-4. 추정값으로 elements 배열을 구성한다
+4. 이미지 분석만으로 확정할 수 없는 구조, 상태, 간격, 타이포그래피가 있으면 사용자에게 확인한다
+5. 확인된 값으로만 elements 배열을 구성한다
 
 ### Modify 모드
 
 1. 대상 컴포넌트 파일을 읽는다
-2. dev server가 실행 중이면 Playwright로 현재 상태의 스크린샷을 캡처하여 `.ui-artifacts/design-ref.png`로 저장한다. dev server가 없으면 스크린샷 캡처를 건너뛰고 `meta.designScreenshot`을 `null`로 설정한다.
+2. dev server가 실행 중이면 Playwright로 현재 상태의 스크린샷을 캡처하여 `e2e/.ui-artifacts/design-ref.png`로 저장한다. dev server가 없으면 스크린샷 캡처를 건너뛰고 `meta.designScreenshot`을 `null`로 설정한다.
 3. 현재 코드에서 스타일 값을 추출한다
 4. 변경 요청을 반영하여 elements 배열을 구성한다
 
@@ -63,8 +76,9 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
 
 1. 텍스트 설명을 분석하여 컴포넌트 구조를 추정한다
 2. 프로젝트의 `tailwind.config.ts`가 있으면 읽어 디자인 토큰을 참조한다
-3. 추정값으로 elements 배열을 구성한다
-4. `meta.designScreenshot`은 `null`로 설정한다 (AI 비전 검증 스킵)
+3. 구현에 필요한 디테일이 모호하면 사용자에게 질문한다
+4. 확인된 값으로만 elements 배열을 구성한다
+5. `meta.designScreenshot`은 `null`로 설정한다 (AI 비전 검증 스킵)
 
 ## 3-1. Figma 에셋 추출 (Figma 모드 전용)
 
@@ -86,8 +100,8 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
 3. 저장 위치는 프로젝트 구조에 맞게 결정한다:
    - `public/` 디렉토리가 있으면 → `public/images/`, `public/icons/`
    - `src/assets/`가 있으면 → `src/assets/images/`, `src/assets/icons/`
-   - 없으면 → `.ui-artifacts/assets/`에 임시 저장하고 사용자에게 위치를 확인한다
-4. 추출된 에셋 정보를 `.ui-spec.json`의 `assets` 배열에 기록한다
+   - 없으면 → `e2e/.ui-artifacts/assets/`에 임시 저장하고 사용자에게 위치를 확인한다
+4. 추출된 에셋 정보를 `e2e/.ui-spec.json`의 `assets` 배열에 기록한다
 
 **주의사항:**
 - SVG 추출이 불가능한 경우 (벡터 데이터가 없는 경우) PNG로 대체한다
@@ -106,9 +120,9 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
 - `verification.baseURL`: 기본값 `http://localhost:3000`
 - `verification.viewport`: 기본값 `{ "width": 375, "height": 812 }`
 
-## 6. .ui-spec.json 생성
+## 6. e2e/.ui-spec.json 생성
 
-프로젝트 루트에 `.ui-spec.json`을 Write 도구로 생성한다.
+`e2e/.ui-spec.json`을 Write 도구로 생성한다.
 
 **스펙 포맷:**
 
@@ -117,7 +131,7 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
   "meta": {
     "source": "figma | text | screenshot | modify",
     "sourceRef": "입력 소스 참조",
-    "designScreenshot": ".ui-artifacts/design-ref.png 또는 null",
+    "designScreenshot": "e2e/.ui-artifacts/design-ref.png 또는 null",
     "createdAt": "ISO 8601"
   },
   "component": {
@@ -138,6 +152,7 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
     {
       "id": "camelCase 식별자",
       "testId": "kebab-case data-testid",
+      "sourceNodeId": "Figma 노드 ID 또는 null",
       "styles": {
         "background-color": "rgba/rgb 값",
         "border-radius": "px 값",
@@ -166,11 +181,12 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 .ui-
 - `styles` 값은 `getComputedStyle()`이 반환하는 형식 (예: `rgb(255, 255, 255)`, `18px`)
 - `layout` 필드는 선택적. 지정된 속성만 검증
 - `tolerance`는 element 레벨 또는 `verification` 레벨에서 설정. element 레벨이 우선
+- `sourceNodeId`는 Figma 기반 element의 근거 node를 기록한다. verify 단계에서 차이가 날 때 이 값을 기준으로 재조회한다
 
 ## 7. 진행 상태 업데이트
 
-`.ui-progress.json`이 존재하면 (`/ui-ralph` 오케스트레이터에서 호출된 경우) `stages.spec.status`를 `"done"`, `stages.spec.completedAt`을 현재 시각으로 업데이트한다.
+`e2e/.ui-progress.json`이 존재하면 (`/ui-ralph` 오케스트레이터에서 호출된 경우) `stages.spec.status`를 `"done"`, `stages.spec.completedAt`을 현재 시각으로 업데이트한다.
 
 ## 8. 완료
 
-생성된 `.ui-spec.json`의 elements 수와 주요 내용을 사용자에게 요약한다.
+생성된 `e2e/.ui-spec.json`의 elements 수와 주요 내용을 사용자에게 요약한다.

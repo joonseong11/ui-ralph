@@ -1,25 +1,25 @@
 ---
-description: .ui-spec.json 기반으로 컴포넌트 코드 + E2E 테스트 자동 생성
+description: e2e/.ui-spec.json 기반으로 컴포넌트 코드 + E2E 테스트 자동 생성
 ---
 
 # /ui-ralph:gen — 코드 생성
 
-`.ui-spec.json`을 읽고 컴포넌트 코드와 E2E 테스트를 생성한다.
+`e2e/.ui-spec.json`을 읽고 컴포넌트 코드와 E2E 테스트를 생성한다.
 
 ## 전제 조건
 
-**반드시** 다음 명령을 Bash 도구로 실행하여 `.ui-spec.json` 존재를 확인한다:
+**반드시** 다음 명령을 Bash 도구로 실행하여 `e2e/.ui-spec.json` 존재를 확인한다:
 
 ```bash
-test -f .ui-spec.json && echo "GATE PASS" || echo "GATE FAIL"
+test -f e2e/.ui-spec.json && echo "GATE PASS" || echo "GATE FAIL"
 ```
 
 - `GATE PASS` → 계속 진행
-- `GATE FAIL` → ⛔ **중단.** "/ui-ralph:spec을 먼저 실행해주세요."라고 안내한다. `.ui-spec.json` 없이 코드를 생성하지 않는다.
+- `GATE FAIL` → ⛔ **중단.** "/ui-ralph:spec을 먼저 실행해주세요."라고 안내한다. `e2e/.ui-spec.json` 없이 코드를 생성하지 않는다.
 
 ## 1. 스펙 로드
 
-`.ui-spec.json`을 Read 도구로 읽고 파싱한다.
+`e2e/.ui-spec.json`을 Read 도구로 읽고 파싱한다.
 
 ## 2. 컴포넌트 코드 생성
 
@@ -31,7 +31,7 @@ test -f .ui-spec.json && echo "GATE PASS" || echo "GATE FAIL"
 - 날짜/시간 처리는 `dayjs` 사용 (Date 객체 직접 사용 금지)
 
 **에셋 참조 (assets 배열이 있을 때):**
-- `.ui-spec.json`의 `assets` 배열에 기록된 에셋 파일을 컴포넌트에서 참조한다
+- `e2e/.ui-spec.json`의 `assets` 배열에 기록된 에셋 파일을 컴포넌트에서 참조한다
 - SVG 파일: React 컴포넌트로 import하거나 `<img src="...">` 또는 인라인 SVG로 사용
 - PNG 파일: `<img src="...">` 또는 Next.js `Image` 컴포넌트로 사용
 - import 경로는 `assets[].targetPath` 기준으로 결정한다
@@ -46,13 +46,13 @@ test -f .ui-spec.json && echo "GATE PASS" || echo "GATE FAIL"
 
 ## 3. E2E 테스트 생성
 
-`.ui-artifacts/e2e-spec.ts` 파일을 생성한다.
+`e2e/.ui-artifacts/e2e-spec.ts` 파일을 생성한다.
 
 **테스트 구조:**
 
 ```typescript
 import { test, expect } from '@playwright/test';
-import { validateStyles, validateLayout, formatValidationResult } from '../e2e/utils/visual-validator';
+import { validateStyles, validateLayout, formatValidationResult } from '../utils/visual-validator';
 
 test.describe('{component.name} 스타일/레이아웃 검증', () => {
   test.beforeEach(async ({ page }) => {
@@ -80,21 +80,21 @@ test.describe('{component.name} 스타일/레이아웃 검증', () => {
 
   // 스크린샷 캡처 테스트
   test('스크린샷 캡처', async ({ page }) => {
-    await page.screenshot({ path: '.ui-artifacts/impl-screenshot.png', fullPage: false });
+    await page.screenshot({ path: 'e2e/.ui-artifacts/impl-screenshot.png', fullPage: false });
   });
 });
 ```
 
 **주의사항:**
-- import 경로: `.ui-artifacts/`는 프로젝트 루트의 직접 하위이므로 `../e2e/utils/visual-validator`로 한 단계만 올라감
-- styles 객체의 키는 반드시 kebab-case (`.ui-spec.json`과 동일)
+- import 경로: `e2e/.ui-artifacts/`에서 `e2e/utils/`를 참조하므로 `../utils/visual-validator`를 사용한다
+- styles 객체의 키는 반드시 kebab-case (`e2e/.ui-spec.json`과 동일)
 - `validateStyles`에 `{ tolerance: verification.styleTolerance }` 전달
 - `validateLayout`에 `{ tolerance: element.layout.tolerance ?? verification.layoutTolerance }` 전달
-- `{...}` 표기는 pseudo-template. 실제 생성 시 `.ui-spec.json` 값으로 치환하여 TypeScript 코드를 작성한다
+- `{...}` 표기는 pseudo-template. 실제 생성 시 `e2e/.ui-spec.json` 값으로 치환하여 TypeScript 코드를 작성한다
 
 ## 4. 진행 상태 업데이트
 
-`.ui-progress.json`이 존재하면 (`/ui-ralph` 오케스트레이터에서 호출된 경우) `stages.gen.status`를 `"done"`, `stages.gen.completedAt`을 현재 시각으로 업데이트한다.
+`e2e/.ui-progress.json`이 존재하면 (`/ui-ralph` 오케스트레이터에서 호출된 경우) `stages.gen.status`를 `"done"`, `stages.gen.completedAt`을 현재 시각으로 업데이트한다.
 
 ## 5. 완료
 
