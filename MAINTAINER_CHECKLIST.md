@@ -158,11 +158,21 @@
 확인 포인트:
 - `commands/ui-ralph.md`
 
+### UIR-013 Visual Source Takes Priority Over Pure Modify
+
+기준:
+- Figma URL이나 이미지가 함께 있으면 `modify`보다 `figma`/`screenshot` 모드가 우선이어야 한다
+- "디자인 참조 + 기존 코드 수정" 작업에서 pure `modify`로 떨어져 `designScreenshot = null`이 되면 실패다
+- 시각적 입력이 있는데도 AI 비전 리뷰가 불가능한 경로로 분기하면 실패다
+
+확인 포인트:
+- `commands/ui-ralph/spec.md`
+
 ## 최소 자기검토 절차
 
 1. 변경한 파일을 다시 읽는다
 2. 가능하면 `npm run maintainer:check`를 실행한다
-3. 위 12개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
+3. 위 13개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
 4. 스크립트가 잡지 못하는 의미적 리스크가 없는지 추가로 읽는다
 5. `FAIL` 또는 `UNVERIFIED`가 있으면 최종 응답에서 숨기지 않는다
 
@@ -178,6 +188,7 @@ rg -n "e2e/.ui-spec.json|e2e/.ui-artifacts|e2e/.ui-progress.json|e2e/test-result
 rg -n "UNVERIFIED|0건|skip되었|AI 비전 리뷰 미실행|required check" commands/ui-ralph.md commands/ui-ralph/verify.md README.md
 rg -n "verification.route|\\[id\\]|:id|\\{id\\}|구체 URL" commands/ui-ralph/spec.md commands/ui-ralph/verify.md
 rg -n "단일 컴포넌트 전용이 아니다|멀티페이지|공유 컴포넌트|우회하지 않는다|입력을 나누어 순차 처리" commands/ui-ralph.md
+rg -n "우선순위 규칙|modify보다|figma 모드를 우선|screenshot 모드를 우선|pure `modify`" commands/ui-ralph/spec.md
 ```
 
 ## 최종 보고 형식
@@ -198,4 +209,5 @@ Self-review
 - UIR-010: PASS
 - UIR-011: PASS
 - UIR-012: PASS
+- UIR-013: PASS
 ```

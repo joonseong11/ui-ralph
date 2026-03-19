@@ -130,6 +130,12 @@ case_uir_012() {
     check_has "멀티페이지라는 이유로 Stage 1을 생략하지 않는다" commands/ui-ralph.md
 }
 
+case_uir_013() {
+  check_has 'Figma URL이 있으면 `modify` 요청이나 `src/` 경로가 함께 있어도 `figma` 모드를 우선한다' commands/ui-ralph/spec.md &&
+    check_has '이미지가 첨부되어 있으면 `modify` 요청이나 `src/` 경로가 함께 있어도 `screenshot` 모드를 우선한다' commands/ui-ralph/spec.md &&
+    check_has '`modify` 모드는 시각적 입력(Figma URL, 이미지)이 전혀 없을 때만 선택한다' commands/ui-ralph/spec.md
+}
+
 echo "ui-ralph maintainer checks"
 
 run_case "UIR-001" case_uir_001
@@ -144,6 +150,7 @@ run_case "UIR-009" case_uir_009
 run_case "UIR-010" case_uir_010
 run_case "UIR-011" case_uir_011
 run_case "UIR-012" case_uir_012
+run_case "UIR-013" case_uir_013
 
 echo "Summary: $pass_count passed, $fail_count failed"
 
