@@ -51,9 +51,9 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 2. Figma MCP `get_metadata`로 먼저 상위 구조를 확인한다
 3. root node가 작고 응답이 안정적이면 root에 대해 `get_design_context`를 호출한다
 4. root node가 크거나 섹션이 많으면, `get_metadata` 결과를 기준으로 header, content, card list, footer 같은 하위 섹션 node로 분해한 뒤 `get_design_context`를 **순차적으로** 호출한다
-5. Figma MCP `get_screenshot` 도구로 root 디자인 스크린샷을 캡처하고 `e2e/.ui-artifacts/design-ref.png`로 저장한다
+5. Figma MCP `get_screenshot` 도구로 root 디자인 스크린샷을 캡처한다. 파일 저장이 가능하면 `e2e/.ui-artifacts/design-ref.png`로 저장하고, MCP가 이미지를 인라인으로만 반환하면 현재 턴 컨텍스트의 시각적 참조로 유지한다
 6. 어떤 `get_design_context` 응답이든 `[OUTPUT TRUNCATED]`, 과도한 대형 응답 경고, 또는 명백한 누락이 보이면 그 응답을 버리고 더 작은 하위 node들로 재조회한다. 불완전한 응답으로는 `e2e/.ui-spec.json`을 쓰지 않는다
-7. root 디자인 스크린샷을 확보하지 못하면 Stage 1을 완료하지 않는다. Figma 입력에서 `meta.designScreenshot`은 필수다
+7. root 디자인 스크린샷을 확보하지 못하면 Stage 1을 완료하지 않는다. Figma 입력에서 `meta.designScreenshot`은 필수이며, 파일 경로 또는 인라인 참조여야 한다
 8. 검증된 디자인 정보에서 스타일과 레이아웃을 추출하여 elements 배열을 구성한다. `get_metadata`는 분해용으로만 쓰고, 최종 값 확정에는 사용하지 않는다
 9. Figma 유래 element에는 가능한 한 `sourceNodeId`를 기록하여 후속 재조회와 검증에 사용한다
 10. **에셋 추출** — 디자인에서 이미지/아이콘 요소를 식별하고 파일로 추출한다 (아래 "Figma 에셋 추출" 참조)
@@ -66,10 +66,10 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 
 ### Screenshot 모드
 
-1. 첨부된 이미지를 `e2e/.ui-artifacts/design-ref.png`로 복사한다
+1. 첨부된 이미지를 파일로 저장할 수 있으면 `e2e/.ui-artifacts/design-ref.png`로 복사하고, 그렇지 않으면 현재 턴 컨텍스트의 인라인 참조로 유지한다
 2. 이미지를 분석하여 색상, 레이아웃, 폰트 크기 등을 추정한다
 3. 프로젝트의 `tailwind.config.ts`가 있으면 읽어 디자인 토큰과 매칭한다
-4. 원본 이미지를 확보하지 못하면 Stage 1을 완료하지 않는다. screenshot 입력에서 `meta.designScreenshot`은 필수다
+4. 원본 이미지를 확보하지 못하면 Stage 1을 완료하지 않는다. screenshot 입력에서 `meta.designScreenshot`은 필수이며, 파일 경로 또는 인라인 참조여야 한다
 5. 이미지 분석만으로 확정할 수 없는 구조, 상태, 간격, 타이포그래피가 있으면 사용자에게 확인한다
 6. 확인된 값으로만 elements 배열을 구성한다
 
@@ -141,7 +141,7 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
   "meta": {
     "source": "figma | text | screenshot | modify",
     "sourceRef": "입력 소스 참조",
-    "designScreenshot": "e2e/.ui-artifacts/design-ref.png 또는 null",
+    "designScreenshot": "e2e/.ui-artifacts/design-ref.png | inline:figma-current-turn | inline:user-attachment | null",
     "createdAt": "ISO 8601"
   },
   "component": {
@@ -192,6 +192,8 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 - `layout` 필드는 선택적. 지정된 속성만 검증
 - `tolerance`는 element 레벨 또는 `verification` 레벨에서 설정. element 레벨이 우선
 - `sourceNodeId`는 Figma 기반 element의 근거 node를 기록한다. verify 단계에서 차이가 날 때 이 값을 기준으로 재조회한다
+- `meta.designScreenshot`은 파일 경로일 수도 있고, 현재 턴에서만 유효한 인라인 참조(`inline:*`)일 수도 있다
+- Figma/screenshot 입력에서 인라인 이미지가 확보되었는데도 `designScreenshot`을 `null`로 두면 안 된다
 
 ## 7. 진행 상태 업데이트
 

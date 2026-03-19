@@ -136,6 +136,14 @@ case_uir_013() {
     check_has '`modify` 모드는 시각적 입력(Figma URL, 이미지)이 전혀 없을 때만 선택한다' commands/ui-ralph/spec.md
 }
 
+case_uir_014() {
+  check_has "inline:figma-current-turn" commands/ui-ralph/spec.md &&
+    check_has "inline:user-attachment" commands/ui-ralph/spec.md &&
+    check_has 'Figma/screenshot 입력에서 인라인 이미지가 확보되었는데도 `designScreenshot`을 `null`로 두면 안 된다' commands/ui-ralph/spec.md &&
+    check_has 'designScreenshot이 `inline:*` 참조인 경우:' commands/ui-ralph/verify.md &&
+    check_has "현재 턴 컨텍스트에 더 이상 남아 있지 않았던 경우" commands/ui-ralph/verify.md
+}
+
 echo "ui-ralph maintainer checks"
 
 run_case "UIR-001" case_uir_001
@@ -151,6 +159,7 @@ run_case "UIR-010" case_uir_010
 run_case "UIR-011" case_uir_011
 run_case "UIR-012" case_uir_012
 run_case "UIR-013" case_uir_013
+run_case "UIR-014" case_uir_014
 
 echo "Summary: $pass_count passed, $fail_count failed"
 

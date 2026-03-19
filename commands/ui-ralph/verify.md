@@ -71,12 +71,18 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 
 `e2e/.ui-spec.json`의 `meta.designScreenshot`을 확인한다.
 
-**designScreenshot이 있는 경우:**
+**designScreenshot이 파일 경로인 경우:**
 1. `e2e/.ui-artifacts/impl-screenshot.png` (Stage 1에서 캡처됨)을 Read 도구로 읽는다
-2. `e2e/.ui-artifacts/design-ref.png`를 Read 도구로 읽는다
+2. `meta.designScreenshot`이 가리키는 파일을 Read 도구로 읽는다
 3. 두 이미지를 비교하여 시각적 차이점을 분석한다
 4. 차이점을 목록으로 작성한다
 5. 둘 중 하나라도 파일이 없으면 최종 결과는 `UNVERIFIED`다
+
+**designScreenshot이 `inline:*` 참조인 경우:**
+1. 현재 턴 컨텍스트에 남아 있는 디자인 이미지를 시각적 참조로 사용한다
+2. `e2e/.ui-artifacts/impl-screenshot.png`를 Read 도구로 읽는다
+3. 같은 턴에서 두 이미지를 비교하여 시각적 차이점을 분석한다
+4. 인라인 참조가 현재 턴에 없거나 구현 스크린샷이 없으면 최종 결과는 `UNVERIFIED`다
 
 **designScreenshot이 null인 경우:**
 - `meta.source`가 `figma` 또는 `screenshot`이면 최종 결과는 `UNVERIFIED`다
@@ -135,6 +141,7 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 - `verification.route`가 실제로 렌더 가능한 구체 URL이 아니었던 경우
 - `meta.source`가 `figma` 또는 `screenshot`인데 `designScreenshot`이 없어서 AI 비전 리뷰를 수행하지 못한 경우
 - AI 비전 리뷰가 required인데 `e2e/.ui-artifacts/design-ref.png` 또는 `e2e/.ui-artifacts/impl-screenshot.png`가 없었던 경우
+- AI 비전 리뷰가 required인데 `designScreenshot`이 인라인 참조였으나 현재 턴 컨텍스트에 더 이상 남아 있지 않았던 경우
 - 위 조건 중 하나라도 있으면 "검증 통과"라고 표현하지 않는다
 
 ## 4. 결과 판정 및 출력
