@@ -2,6 +2,9 @@
 
 AI agent skills that build UI from Figma/screenshot/text and iterate until all tests pass.
 
+[![npm version](https://img.shields.io/npm/v/ui-ralph)](https://www.npmjs.com/package/ui-ralph)
+[npm package](https://www.npmjs.com/package/ui-ralph)
+
 ## What it does
 
 Ralph takes a design input and automatically:
