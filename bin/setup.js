@@ -2,21 +2,27 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const command = process.argv[2] || 'install';
-const target = (process.argv[3] || 'all').toLowerCase();
 const validTargets = new Set(['all', 'claude', 'codex']);
 const CODEX_BLOCK_START = '<!-- ui-ralph codex:start -->';
 const CODEX_BLOCK_END = '<!-- ui-ralph codex:end -->';
 
-if (!validTargets.has(target)) {
-  printUsage(1);
-}
-
 if (command === 'install') {
+  const target = (process.argv[3] || 'all').toLowerCase();
+  if (!validTargets.has(target)) {
+    printUsage(1);
+  }
   install(target);
 } else if (command === 'uninstall') {
+  const target = (process.argv[3] || 'all').toLowerCase();
+  if (!validTargets.has(target)) {
+    printUsage(1);
+  }
   uninstall(target);
+} else if (command === 'harness') {
+  runHarness(process.argv.slice(3));
 } else {
   printUsage(0);
 }
@@ -27,6 +33,7 @@ function printUsage(exitCode) {
 Usage:
   ui-ralph install [all|claude|codex]
   ui-ralph uninstall [all|claude|codex]
+  ui-ralph harness <init|status|gate> [...]
   `);
   process.exit(exitCode);
 }
@@ -49,6 +56,21 @@ function install(installTarget) {
   }
 
   console.log('\n✓ ui-ralph installed. Use /ui-ralph in Claude Code or mention "ui-ralph" in Codex to start.');
+}
+
+function runHarness(args) {
+  const harnessPath = path.join(__dirname, '..', 'scripts', 'ui-ralph-harness.js');
+  const result = spawnSync(process.execPath, [harnessPath, ...args], {
+    stdio: 'inherit',
+    env: process.env,
+  });
+
+  if (result.error) {
+    console.error(result.error.message);
+    process.exit(1);
+  }
+
+  process.exit(result.status ?? 1);
 }
 
 function installClaudeCommands(projectRoot) {

@@ -155,6 +155,7 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 - **ERROR:** 실행 에러를 요약하고 해결 방법을 제안
 - **UNVERIFIED:** 누락된 검증 조건을 요약하고 "△ 검증 불충분. 리포트: e2e/.ui-artifacts/verification-report.md" 출력
 - `qualityMode = best-effort`이면 PASS는 best-effort 범위 통과를 뜻하며 exact parity 보장을 의미하지 않는다
+- `qualityMode = exact`이면 검증 PASS 후에도 `e2e/.ui-artifacts/human-approval.json` 승인 기록이 있어야 최종 완료 가능하다
 
 **진행 상태 업데이트:** `e2e/.ui-progress.json`이 존재하면 (`/ui-ralph` 오케스트레이터에서 호출된 경우) `stages.verify.status`를 `"done"`, `stages.verify.completedAt`을 현재 시각으로 업데이트한다.
 

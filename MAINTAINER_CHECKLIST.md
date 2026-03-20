@@ -204,11 +204,38 @@
 - `commands/ui-ralph/verify.md`
 - `README.md`
 
+### UIR-017 Harness Enforces Stage Gates
+
+기준:
+- 문서가 하네스(`ui-ralph harness ...`) 사용을 요구해야 한다
+- Gate Check가 단순 파일 존재 확인이 아니라 하네스 gate 명령을 사용해야 한다
+- 하네스 스크립트가 `spec -> gen -> verify` 순서를 실제로 집행해야 한다
+- verification report가 PASS가 아니면 하네스가 완료를 허용하면 안 된다
+
+확인 포인트:
+- `bin/setup.js`
+- `scripts/ui-ralph-harness.js`
+- `commands/ui-ralph.md`
+- `README.md`
+
+### UIR-018 Exact Mode Requires Human Approval
+
+기준:
+- exact mode에서는 verification PASS만으로 완료되면 안 된다
+- `human-approval.json` 같은 승인 기록이 있어야 하네스가 완료를 허용해야 한다
+- Figma/screenshot exact는 AI 비전 PASS와 complete verification이 같이 요구되어야 한다
+
+확인 포인트:
+- `scripts/ui-ralph-harness.js`
+- `commands/ui-ralph.md`
+- `commands/ui-ralph/verify.md`
+- `README.md`
+
 ## 최소 자기검토 절차
 
 1. 변경한 파일을 다시 읽는다
 2. 가능하면 `npm run maintainer:check`를 실행한다
-3. 위 16개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
+3. 위 18개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
 4. 스크립트가 잡지 못하는 의미적 리스크가 없는지 추가로 읽는다
 5. `FAIL` 또는 `UNVERIFIED`가 있으면 최종 응답에서 숨기지 않는다
 
@@ -228,6 +255,8 @@ rg -n "우선순위 규칙|modify보다|figma 모드를 우선|screenshot 모드
 rg -n "inline:figma-current-turn|inline:user-attachment|인라인 참조|현재 턴 컨텍스트|designScreenshot을 `null`로 두면 안 된다" commands/ui-ralph/spec.md commands/ui-ralph/verify.md
 rg -n "\\.claude/commands|AGENTS.md|Codex does not use Claude slash-command installation|ui-ralph uninstall codex|mention[s]? of `ui-ralph`" README.md bin/setup.js
 rg -n "qualityMode|referenceType|exact|best-effort|approved-text-reference|text-reference.md" commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/verify.md README.md
+rg -n "ui-ralph harness|\\.ui-ralph-run.json|gate spec|gate gen|gate verify|stateful harness" README.md commands/ui-ralph.md scripts/ui-ralph-harness.js bin/setup.js
+rg -n "human-approval.json|harness approve|complete verification|AI vision PASS" README.md commands/ui-ralph.md commands/ui-ralph/verify.md scripts/ui-ralph-harness.js
 ```
 
 ## 최종 보고 형식
@@ -252,4 +281,6 @@ Self-review
 - UIR-014: PASS
 - UIR-015: PASS
 - UIR-016: PASS
+- UIR-017: PASS
+- UIR-018: PASS
 ```

@@ -56,10 +56,9 @@ case_uir_001() {
 }
 
 case_uir_002() {
-  check_has "e2e/.ui-spec.json exists" commands/ui-ralph.md &&
+  check_has "e2e/.ui-spec.json" commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md &&
     check_has "e2e/.ui-artifacts/e2e-spec.ts" commands/ui-ralph.md commands/ui-ralph/verify.md &&
-    check_has "verification report exists" commands/ui-ralph.md &&
-    check_has "e2e/.ui-spec.json" commands/ui-ralph/gen.md &&
+    check_has "e2e/.ui-artifacts/verification-report.md" commands/ui-ralph.md commands/ui-ralph/verify.md &&
     check_has "e2e/" commands/ui-ralph.md
 }
 
@@ -159,6 +158,23 @@ case_uir_016() {
     check_has "## 품질 모드" commands/ui-ralph.md
 }
 
+case_uir_017() {
+  check_has "ui-ralph harness" README.md commands/ui-ralph.md bin/setup.js &&
+    check_has ".ui-ralph-run.json" README.md commands/ui-ralph.md scripts/ui-ralph-harness.js &&
+    check_has "ui-ralph harness gate spec" commands/ui-ralph.md &&
+    check_has "ui-ralph harness gate gen" commands/ui-ralph.md &&
+    check_has "ui-ralph harness gate verify" commands/ui-ralph.md &&
+    check_has "Stage order violation" scripts/ui-ralph-harness.js &&
+    check_has "Verification did not pass" scripts/ui-ralph-harness.js
+}
+
+case_uir_018() {
+  check_has "human-approval.json" README.md commands/ui-ralph/verify.md scripts/ui-ralph-harness.js &&
+    check_has "ui-ralph harness approve --by <name>" commands/ui-ralph.md scripts/ui-ralph-harness.js &&
+    check_has "complete verification" README.md scripts/ui-ralph-harness.js &&
+    check_has "AI vision PASS" README.md scripts/ui-ralph-harness.js
+}
+
 echo "ui-ralph maintainer checks"
 
 run_case "UIR-001" case_uir_001
@@ -177,6 +193,8 @@ run_case "UIR-013" case_uir_013
 run_case "UIR-014" case_uir_014
 run_case "UIR-015" case_uir_015
 run_case "UIR-016" case_uir_016
+run_case "UIR-017" case_uir_017
+run_case "UIR-018" case_uir_018
 
 echo "Summary: $pass_count passed, $fail_count failed"
 

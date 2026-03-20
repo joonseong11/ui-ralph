@@ -54,6 +54,21 @@ ui-ralph:verify 실행해줘
 
 Codex does not use Claude slash-command installation. Instead, the installer writes a managed block into the project root `AGENTS.md` so plain-text mentions of `ui-ralph` trigger the same workflow.
 
+## Harness
+
+`ui-ralph` now includes a stateful harness that enforces stage order and blocks completion unless verification passes.
+
+```bash
+ui-ralph harness init --quality exact --source figma --ref "https://figma.com/..."
+ui-ralph harness approve --by "reviewer-name"
+ui-ralph harness gate spec
+ui-ralph harness gate gen
+ui-ralph harness gate verify
+ui-ralph harness status
+```
+
+In exact mode, `ui-ralph harness gate verify` will refuse to complete unless the verification report is `PASS`, verification completeness is `complete`, and a human approval file exists.
+
 ## Quality Modes
 
 - `exact`: Figma, screenshot, 또는 승인된 text reference를 기준으로 완전 일치를 목표로 한다
