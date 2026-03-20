@@ -51,6 +51,13 @@ ui-ralph:verify 실행해줘
 
 Codex does not use Claude slash-command installation. Instead, the installer writes a managed block into the project root `AGENTS.md` so plain-text mentions of `ui-ralph` trigger the same workflow.
 
+## Quality Modes
+
+- `exact`: Figma, screenshot, 또는 승인된 text reference를 기준으로 완전 일치를 목표로 한다
+- `best-effort`: 구조와 의도를 우선하는 빠른 구현 모드다
+
+Text-only exact work is not allowed to finish directly. It must first create and get approval for a reference artifact.
+
 ## Requirements
 
 - [Claude Code](https://claude.ai/claude-code) CLI

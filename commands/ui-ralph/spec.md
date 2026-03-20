@@ -14,6 +14,7 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 - Figma MCP 응답이 `[OUTPUT TRUNCATED]`, 과도한 대형 응답 경고, 또는 명백한 불완전 상태라면 해당 node는 신뢰하지 않는다. 더 작은 하위 node를 다시 조회한 뒤에만 spec을 확정한다
 - screenshot/text 모드에서 구현에 필요한 정보가 모호하면 질문하고 멈춘다. 확정되지 않은 값으로 `e2e/.ui-spec.json`을 쓰지 않는다
 - `ui-ralph` 임시 산출물은 모두 `e2e/` 하위에 둔다. 프로젝트 루트에 `.ui-spec.json`이나 `.ui-artifacts/`를 만들지 않는다
+- `qualityMode = exact`이면 승인된 reference 없이 완료를 선언하지 않는다
 
 ## 1. 사전 준비
 
@@ -40,6 +41,10 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 - 이미지가 첨부되어 있으면 `modify` 요청이나 `src/` 경로가 함께 있어도 `screenshot` 모드를 우선한다
 - `modify` 모드는 시각적 입력(Figma URL, 이미지)이 전혀 없을 때만 선택한다
 - 즉, "디자인 참조 + 기존 코드 수정" 작업은 pure `modify`가 아니라 `figma` 또는 `screenshot` 기반 수정으로 처리한다
+
+**품질 모드 결정:**
+- 사용자가 "똑같이", "디테일까지", "pixel-perfect", "같을 때까지", "완전히 동일" 같은 표현을 쓰면 `qualityMode = exact`
+- 그렇지 않으면 `qualityMode = best-effort`
 
 ## 3. 모드별 처리
 
@@ -84,9 +89,11 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 
 1. 텍스트 설명을 분석하여 컴포넌트 구조를 추정한다
 2. 프로젝트의 `tailwind.config.ts`가 있으면 읽어 디자인 토큰을 참조한다
-3. 구현에 필요한 디테일이 모호하면 사용자에게 질문한다
-4. 확인된 값으로만 elements 배열을 구성한다
-5. `meta.designScreenshot`은 `null`로 설정한다 (AI 비전 검증 스킵)
+3. `qualityMode = exact`이면 `e2e/.ui-artifacts/text-reference.md`에 승인용 기준안을 만든 뒤 사용자 승인을 받는다
+4. `qualityMode = exact`인데 기준안 승인이 없으면 Stage 1을 완료하지 않는다
+5. 구현에 필요한 디테일이 모호하면 사용자에게 질문한다
+6. 확인된 값으로만 elements 배열을 구성한다
+7. `meta.designScreenshot`은 `null`로 설정한다 (AI 비전 검증 스킵)
 
 ## 3-1. Figma 에셋 추출 (Figma 모드 전용)
 
@@ -142,6 +149,8 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
     "source": "figma | text | screenshot | modify",
     "sourceRef": "입력 소스 참조",
     "designScreenshot": "e2e/.ui-artifacts/design-ref.png | inline:figma-current-turn | inline:user-attachment | null",
+    "qualityMode": "exact | best-effort",
+    "referenceType": "figma | screenshot | approved-text-reference | none",
     "createdAt": "ISO 8601"
   },
   "component": {
@@ -194,6 +203,8 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 - `sourceNodeId`는 Figma 기반 element의 근거 node를 기록한다. verify 단계에서 차이가 날 때 이 값을 기준으로 재조회한다
 - `meta.designScreenshot`은 파일 경로일 수도 있고, 현재 턴에서만 유효한 인라인 참조(`inline:*`)일 수도 있다
 - Figma/screenshot 입력에서 인라인 이미지가 확보되었는데도 `designScreenshot`을 `null`로 두면 안 된다
+- `meta.qualityMode = exact`이면 `referenceType`이 `figma`, `screenshot`, `approved-text-reference` 중 하나여야 한다
+- text-only exact 요청에서는 `approved-text-reference` 승인 전까지 Stage 1을 완료하지 않는다
 
 ## 7. 진행 상태 업데이트
 

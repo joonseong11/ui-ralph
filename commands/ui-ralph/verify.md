@@ -15,6 +15,7 @@ description: e2e/.ui-spec.json 기준으로 구현 결과를 3단계 검증 (스
 - `ERROR`: 검증 실행 자체가 실패했을 때 사용한다
 - `UNVERIFIED`: 필요한 검증이 skip되었거나, 입력/경로/스크린샷 부족으로 완전한 검증이 불가능할 때 사용한다
 - `UNVERIFIED`를 `PASS`처럼 요약하거나 "스크린샷 비교까지 통과"라고 표현하면 안 된다
+- `qualityMode = exact`이면 승인된 reference 기준이 실제로 존재해야만 `PASS`를 낼 수 있다
 
 ## 전제 조건
 
@@ -142,6 +143,7 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 - `meta.source`가 `figma` 또는 `screenshot`인데 `designScreenshot`이 없어서 AI 비전 리뷰를 수행하지 못한 경우
 - AI 비전 리뷰가 required인데 `e2e/.ui-artifacts/design-ref.png` 또는 `e2e/.ui-artifacts/impl-screenshot.png`가 없었던 경우
 - AI 비전 리뷰가 required인데 `designScreenshot`이 인라인 참조였으나 현재 턴 컨텍스트에 더 이상 남아 있지 않았던 경우
+- `meta.qualityMode = exact`인데 `referenceType`이 `none`이거나 text-only 승인 reference가 없는 경우
 - 위 조건 중 하나라도 있으면 "검증 통과"라고 표현하지 않는다
 
 ## 4. 결과 판정 및 출력
@@ -152,6 +154,7 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 - **FAIL:** 실패 항목을 요약하여 출력. 실패 원인과 수정 방향 제안
 - **ERROR:** 실행 에러를 요약하고 해결 방법을 제안
 - **UNVERIFIED:** 누락된 검증 조건을 요약하고 "△ 검증 불충분. 리포트: e2e/.ui-artifacts/verification-report.md" 출력
+- `qualityMode = best-effort`이면 PASS는 best-effort 범위 통과를 뜻하며 exact parity 보장을 의미하지 않는다
 
 **진행 상태 업데이트:** `e2e/.ui-progress.json`이 존재하면 (`/ui-ralph` 오케스트레이터에서 호출된 경우) `stages.verify.status`를 `"done"`, `stages.verify.completedAt`을 현재 시각으로 업데이트한다.
 

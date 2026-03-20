@@ -152,6 +152,13 @@ case_uir_015() {
     check_has "managed by ui-ralph" bin/setup.js
 }
 
+case_uir_016() {
+  check_has '`qualityMode = exact`이면 승인된 reference 없이 완료를 선언하지 않는다' commands/ui-ralph/spec.md &&
+    check_has '`qualityMode = exact`이면 승인된 reference 기준이 실제로 존재해야만 `PASS`를 낼 수 있다' commands/ui-ralph/verify.md &&
+    check_has "Text-only exact work is not allowed to finish directly." README.md &&
+    check_has "## 품질 모드" commands/ui-ralph.md
+}
+
 echo "ui-ralph maintainer checks"
 
 run_case "UIR-001" case_uir_001
@@ -169,6 +176,7 @@ run_case "UIR-012" case_uir_012
 run_case "UIR-013" case_uir_013
 run_case "UIR-014" case_uir_014
 run_case "UIR-015" case_uir_015
+run_case "UIR-016" case_uir_016
 
 echo "Summary: $pass_count passed, $fail_count failed"
 
