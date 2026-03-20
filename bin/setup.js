@@ -4,33 +4,57 @@ const fs = require('fs');
 const path = require('path');
 
 const command = process.argv[2] || 'install';
+const target = (process.argv[3] || 'all').toLowerCase();
+const validTargets = new Set(['all', 'claude', 'codex']);
+const CODEX_BLOCK_START = '<!-- ui-ralph codex:start -->';
+const CODEX_BLOCK_END = '<!-- ui-ralph codex:end -->';
+
+if (!validTargets.has(target)) {
+  printUsage(1);
+}
 
 if (command === 'install') {
-  install();
+  install(target);
 } else if (command === 'uninstall') {
-  uninstall();
+  uninstall(target);
 } else {
+  printUsage(0);
+}
+
+function printUsage(exitCode) {
   console.log(`ui-ralph - AI agent skills for UI development
 
 Usage:
-  ui-ralph install     Install skills to .claude/commands/
-  ui-ralph uninstall   Remove installed skills
+  ui-ralph install [all|claude|codex]
+  ui-ralph uninstall [all|claude|codex]
   `);
+  process.exit(exitCode);
 }
 
 function getProjectRoot() {
   return process.env.INIT_CWD || process.cwd();
 }
 
-function install() {
+function install(installTarget) {
   const projectRoot = getProjectRoot();
+
+  if (installTarget === 'all' || installTarget === 'claude') {
+    installClaudeCommands(projectRoot);
+  }
+
+  installProjectArtifacts(projectRoot);
+
+  if (installTarget === 'all' || installTarget === 'codex') {
+    installCodexIntegration(projectRoot);
+  }
+
+  console.log('\n✓ ui-ralph installed. Use /ui-ralph in Claude Code or mention "ui-ralph" in Codex to start.');
+}
+
+function installClaudeCommands(projectRoot) {
   const targetCommandsDir = path.join(projectRoot, '.claude', 'commands');
-  const targetE2eDir = path.join(projectRoot, 'e2e', 'utils');
-
   const sourceCommandsDir = path.join(__dirname, '..', 'commands');
-  const sourceE2eDir = path.join(__dirname, '..', 'e2e', 'utils');
 
-  // Remove legacy v0.1.0 command files
   const legacyFiles = ['ui-dev.md', 'ui-spec.md', 'ui-gen.md', 'ui-verify.md'];
   for (const file of legacyFiles) {
     const filePath = path.join(targetCommandsDir, file);
@@ -40,11 +64,14 @@ function install() {
     }
   }
 
-  // Install command skills (recursively copy files and directories)
   fs.mkdirSync(targetCommandsDir, { recursive: true });
   copyCommandsRecursive(sourceCommandsDir, targetCommandsDir, '');
+}
 
-  // Install e2e utilities
+function installProjectArtifacts(projectRoot) {
+  const targetE2eDir = path.join(projectRoot, 'e2e', 'utils');
+  const sourceE2eDir = path.join(__dirname, '..', 'e2e', 'utils');
+
   fs.mkdirSync(targetE2eDir, { recursive: true });
   const utilFile = 'visual-validator.ts';
   const utilSrc = path.join(sourceE2eDir, utilFile);
@@ -57,15 +84,33 @@ function install() {
     console.log(`  skip: e2e/utils/${utilFile} (already exists)`);
   }
 
-  // Install playwright config if not exists
   const playwrightSrc = path.join(__dirname, '..', 'e2e', 'playwright.config.ts');
   const playwrightDest = path.join(projectRoot, 'e2e', 'playwright.config.ts');
   if (!fs.existsSync(playwrightDest) && fs.existsSync(playwrightSrc)) {
     fs.copyFileSync(playwrightSrc, playwrightDest);
     console.log(`  + e2e/playwright.config.ts`);
   }
+}
 
-  console.log('\n✓ ui-ralph installed. Use /ui-ralph in Claude Code to start.');
+function installCodexIntegration(projectRoot) {
+  const agentsPath = path.join(projectRoot, 'AGENTS.md');
+  upsertManagedBlock(agentsPath, renderCodexAgentsBlock());
+  console.log('  + AGENTS.md (ui-ralph Codex block)');
+}
+
+function renderCodexAgentsBlock() {
+  return `${CODEX_BLOCK_START}
+## ui-ralph (managed by ui-ralph)
+
+If the user mentions \`ui-ralph\`, \`/ui-ralph\`, \`/ui-ralph:spec\`, \`/ui-ralph:gen\`, \`/ui-ralph:verify\`, or \`/ui-ralph:clean\`, treat that as invoking the local ui-ralph pipeline in Codex.
+
+- Read \`node_modules/ui-ralph/commands/ui-ralph.md\` for the full orchestrator flow
+- Read the matching stage file under \`node_modules/ui-ralph/commands/ui-ralph/\` when the user asks for a direct stage
+- Do not bypass the pipeline because the task is multi-page, large, or touches many files
+- Use the local ui-ralph docs as the source of truth for spec/gen/verify behavior
+
+Codex does not use Claude slash-command installation. In Codex, plain-text mentions of \`ui-ralph\` should trigger this workflow.
+${CODEX_BLOCK_END}`;
 }
 
 function copyCommandsRecursive(srcDir, destDir, prefix) {
@@ -94,11 +139,22 @@ function copyCommandsRecursive(srcDir, destDir, prefix) {
   }
 }
 
-function uninstall() {
+function uninstall(uninstallTarget) {
   const projectRoot = getProjectRoot();
-  const commandsDir = path.join(projectRoot, '.claude', 'commands');
 
-  // Remove current version files
+  if (uninstallTarget === 'all' || uninstallTarget === 'claude') {
+    uninstallClaudeCommands(projectRoot);
+  }
+
+  if (uninstallTarget === 'all' || uninstallTarget === 'codex') {
+    uninstallCodexIntegration(projectRoot);
+  }
+
+  console.log('\n✓ ui-ralph integrations removed. e2e/ utilities were left in place.');
+}
+
+function uninstallClaudeCommands(projectRoot) {
+  const commandsDir = path.join(projectRoot, '.claude', 'commands');
   const filePath = path.join(commandsDir, 'ui-ralph.md');
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
@@ -111,7 +167,6 @@ function uninstall() {
     console.log('  - .claude/commands/ui-ralph/');
   }
 
-  // Remove legacy v0.1.0 files
   const legacyFiles = ['ui-dev.md', 'ui-spec.md', 'ui-gen.md', 'ui-verify.md'];
   for (const file of legacyFiles) {
     const legacy = path.join(commandsDir, file);
@@ -120,6 +175,62 @@ function uninstall() {
       console.log(`  - .claude/commands/${file} (legacy)`);
     }
   }
+}
 
-  console.log('\n✓ ui-ralph skills removed. e2e/ utilities were left in place.');
+function uninstallCodexIntegration(projectRoot) {
+  const agentsPath = path.join(projectRoot, 'AGENTS.md');
+  if (!fs.existsSync(agentsPath)) {
+    return;
+  }
+
+  const content = fs.readFileSync(agentsPath, 'utf8');
+  const nextContent = removeManagedBlock(content);
+
+  if (nextContent === content) {
+    return;
+  }
+
+  if (nextContent.trim().length === 0) {
+    fs.unlinkSync(agentsPath);
+    console.log('  - AGENTS.md (removed ui-ralph Codex block and deleted empty file)');
+    return;
+  }
+
+  fs.writeFileSync(agentsPath, `${nextContent.trimEnd()}\n`);
+  console.log('  - AGENTS.md (removed ui-ralph Codex block)');
+}
+
+function upsertManagedBlock(filePath, block) {
+  const existing = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+
+  if (existing.includes(CODEX_BLOCK_START) && existing.includes(CODEX_BLOCK_END)) {
+    const pattern = new RegExp(
+      `${escapeRegExp(CODEX_BLOCK_START)}[\\s\\S]*?${escapeRegExp(CODEX_BLOCK_END)}`,
+      'm'
+    );
+    const next = existing.replace(pattern, block);
+    fs.writeFileSync(filePath, `${next.trimEnd()}\n`);
+    return;
+  }
+
+  const next = existing.trim().length === 0
+    ? `${block}\n`
+    : `${existing.trimEnd()}\n\n${block}\n`;
+  fs.writeFileSync(filePath, next);
+}
+
+function removeManagedBlock(content) {
+  if (!content.includes(CODEX_BLOCK_START) || !content.includes(CODEX_BLOCK_END)) {
+    return content;
+  }
+
+  const pattern = new RegExp(
+    `\\n?${escapeRegExp(CODEX_BLOCK_START)}[\\s\\S]*?${escapeRegExp(CODEX_BLOCK_END)}\\n?`,
+    'm'
+  );
+  return content.replace(pattern, '\n');
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

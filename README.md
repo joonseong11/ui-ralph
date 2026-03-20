@@ -19,6 +19,7 @@ npm install -D ui-ralph
 ```
 
 The postinstall script automatically copies skills to `.claude/commands/` and e2e utilities to `e2e/utils/`.
+It also adds a managed `ui-ralph` block to the project root `AGENTS.md` so Codex can trigger the same pipeline.
 
 ## Usage
 
@@ -41,9 +42,19 @@ In Claude Code:
 /ui-ralph:clean   # Remove all artifacts
 ```
 
+In Codex:
+
+```text
+ui-ralph로 진행해줘
+ui-ralph:verify 실행해줘
+```
+
+Codex does not use Claude slash-command installation. Instead, the installer writes a managed block into the project root `AGENTS.md` so plain-text mentions of `ui-ralph` trigger the same workflow.
+
 ## Requirements
 
 - [Claude Code](https://claude.ai/claude-code) CLI
+- [Codex CLI](https://openai.com/codex/) or Codex desktop app
 - Node.js >= 18
 - A running dev server (`npm run dev`) for verification
 
@@ -96,6 +107,13 @@ rm -f e2e/.ui-spec.json e2e/.ui-progress.json .ui-spec.json .ui-progress.json &&
 ```bash
 npx ui-ralph uninstall
 npm uninstall ui-ralph
+```
+
+To remove only one integration:
+
+```bash
+ui-ralph uninstall claude
+ui-ralph uninstall codex
 ```
 
 ## License

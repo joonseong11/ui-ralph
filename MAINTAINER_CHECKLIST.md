@@ -179,11 +179,23 @@
 - `commands/ui-ralph/spec.md`
 - `commands/ui-ralph/verify.md`
 
+### UIR-015 Claude And Codex Entry Points Stay Installed
+
+기준:
+- installer가 Claude용 `.claude/commands/` 설치를 계속 지원해야 한다
+- installer가 Codex용 루트 `AGENTS.md` 관리 블록도 지원해야 한다
+- README에 Claude와 Codex 사용 방법이 모두 문서화되어 있어야 한다
+- Codex에서는 slash command 복제가 아니라 `AGENTS.md` 트리거 방식임을 명확히 설명해야 한다
+
+확인 포인트:
+- `bin/setup.js`
+- `README.md`
+
 ## 최소 자기검토 절차
 
 1. 변경한 파일을 다시 읽는다
 2. 가능하면 `npm run maintainer:check`를 실행한다
-3. 위 14개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
+3. 위 15개 케이스를 `PASS | FAIL | UNVERIFIED`로 판정한다
 4. 스크립트가 잡지 못하는 의미적 리스크가 없는지 추가로 읽는다
 5. `FAIL` 또는 `UNVERIFIED`가 있으면 최종 응답에서 숨기지 않는다
 
@@ -201,6 +213,7 @@ rg -n "verification.route|\\[id\\]|:id|\\{id\\}|구체 URL" commands/ui-ralph/sp
 rg -n "단일 컴포넌트 전용이 아니다|멀티페이지|공유 컴포넌트|우회하지 않는다|입력을 나누어 순차 처리" commands/ui-ralph.md
 rg -n "우선순위 규칙|modify보다|figma 모드를 우선|screenshot 모드를 우선|pure `modify`" commands/ui-ralph/spec.md
 rg -n "inline:figma-current-turn|inline:user-attachment|인라인 참조|현재 턴 컨텍스트|designScreenshot을 `null`로 두면 안 된다" commands/ui-ralph/spec.md commands/ui-ralph/verify.md
+rg -n "\\.claude/commands|AGENTS.md|Codex does not use Claude slash-command installation|ui-ralph uninstall codex|mention[s]? of `ui-ralph`" README.md bin/setup.js
 ```
 
 ## 최종 보고 형식
@@ -223,4 +236,5 @@ Self-review
 - UIR-012: PASS
 - UIR-013: PASS
 - UIR-014: PASS
+- UIR-015: PASS
 ```
