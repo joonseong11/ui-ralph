@@ -10,7 +10,8 @@ ui-ralph이 생성한 임시 파일을 모두 삭제한다.
 
 - `e2e/.ui-spec.json` — 디자인 스펙
 - `e2e/.ui-progress.json` — 파이프라인 진행 상태
-- `e2e/.ui-artifacts/` — 스크린샷, 검증 리포트, E2E 테스트
+- `e2e/.ui-ralph-run.json` — 하네스 상태
+- `e2e/.ui-artifacts/` — 스크린샷, 검증 리포트, E2E 테스트, receipts, 승인 기록
 - `e2e/test-results/` — Playwright 출력
 - 레거시 루트 산출물: `.ui-spec.json`, `.ui-progress.json`, `.ui-artifacts/`, `test-results/`
 
@@ -19,7 +20,7 @@ ui-ralph이 생성한 임시 파일을 모두 삭제한다.
 Bash 도구로 삭제한다:
 
 ```bash
-rm -f e2e/.ui-spec.json e2e/.ui-progress.json .ui-spec.json .ui-progress.json && rm -rf e2e/.ui-artifacts/ e2e/test-results/ .ui-artifacts/ test-results/
+rm -f e2e/.ui-spec.json e2e/.ui-progress.json e2e/.ui-ralph-run.json .ui-spec.json .ui-progress.json && rm -rf e2e/.ui-artifacts/ e2e/test-results/ .ui-artifacts/ test-results/
 ```
 
 삭제 후 결과를 알린다:

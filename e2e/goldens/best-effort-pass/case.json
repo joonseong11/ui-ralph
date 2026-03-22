@@ -1,0 +1,23 @@
+{
+  "id": "best-effort-pass",
+  "qualityMode": "best-effort",
+  "source": "figma",
+  "ref": "golden-best-effort-pass",
+  "steps": [
+    { "args": ["begin", "spec"] },
+    { "args": ["commit", "spec"] },
+    { "args": ["gate", "spec"] },
+    { "args": ["begin", "gen"] },
+    { "args": ["commit", "gen"] },
+    { "args": ["gate", "gen"] },
+    { "args": ["begin", "verify"] },
+    { "args": ["commit", "verify"] },
+    { "args": ["gate", "verify"] }
+  ],
+  "expectation": {
+    "runState": "completed",
+    "inputFsmState": "done",
+    "lastVerificationResult": "PASS",
+    "blockedReasonCode": null
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "ui-ralph",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "AI agent skills that build UI from Figma/screenshot/text and iterate until all tests pass",
   "keywords": [
     "claude-code",
@@ -25,6 +25,7 @@
     "ui-ralph": "bin/setup.js"
   },
   "scripts": {
+    "harness:replay": "node ./scripts/replay-check.js",
     "maintainer:check": "sh ./scripts/maintainer-check.sh",
     "postinstall": "ui-ralph install"
   },

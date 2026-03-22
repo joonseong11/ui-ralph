@@ -1,0 +1,24 @@
+{
+  "id": "multi-input-next-pending",
+  "qualityMode": "best-effort",
+  "init": {
+    "inputsFile": "e2e/inputs.json"
+  },
+  "steps": [
+    { "args": ["begin", "spec"] },
+    { "args": ["commit", "spec"] },
+    { "args": ["gate", "spec"] },
+    { "args": ["begin", "gen"] },
+    { "args": ["commit", "gen"] },
+    { "args": ["gate", "gen"] },
+    { "args": ["begin", "verify"] },
+    { "args": ["commit", "verify"] },
+    { "args": ["gate", "verify"] }
+  ],
+  "expectation": {
+    "runState": "running",
+    "inputFsmState": "done",
+    "lastVerificationResult": "PASS",
+    "blockedReasonCode": null
+  }
+}

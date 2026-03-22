@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "source": "figma",
+    "sourceRef": "golden-verify-fail-repair-pending",
+    "designScreenshot": "e2e/.ui-artifacts/design-ref.png",
+    "qualityMode": "best-effort",
+    "referenceType": "figma",
+    "createdAt": "2026-03-22T00:00:00.000Z"
+  },
+  "component": {
+    "name": "GoldenRepairCard",
+    "targetPath": "src/components/GoldenRepairCard.tsx",
+    "description": "golden repair pending"
+  },
+  "assets": [],
+  "elements": [
+    {
+      "id": "heroCard",
+      "testId": "hero-card",
+      "sourceNodeId": "1:1"
+    }
+  ],
+  "verification": {
+    "viewport": { "width": 375, "height": 812 },
+    "baseURL": "http://localhost:3000",
+    "route": "/demo",
+    "dataStrategy": "static",
+    "styleTolerance": 1,
+    "layoutTolerance": 2,
+    "maxAutoFixAttempts": 3
+  }
+}

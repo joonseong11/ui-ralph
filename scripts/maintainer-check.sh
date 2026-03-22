@@ -103,7 +103,8 @@ case_uir_008() {
 case_uir_009() {
   check_has "e2e/.ui-spec.json" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md &&
     check_has "e2e/.ui-artifacts" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md &&
-    check_has "e2e/.ui-progress.json" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md &&
+    check_has "e2e/.ui-ralph-run.json" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md &&
+    check_has "e2e/.ui-progress.json" README.md commands/ui-ralph.md commands/ui-ralph/clean.md &&
     check_has "e2e/test-results" README.md commands/ui-ralph/clean.md &&
     check_has "outputDir: './test-results'" e2e/playwright.config.ts
 }
@@ -161,6 +162,16 @@ case_uir_016() {
 case_uir_017() {
   check_has "ui-ralph harness" README.md commands/ui-ralph.md bin/setup.js &&
     check_has ".ui-ralph-run.json" README.md commands/ui-ralph.md scripts/ui-ralph-harness.js &&
+    check_has "begin spec" README.md commands/ui-ralph.md commands/ui-ralph/spec.md scripts/ui-ralph-harness.js &&
+    check_has "begin gen" README.md commands/ui-ralph.md commands/ui-ralph/gen.md scripts/ui-ralph-harness.js &&
+    check_has "begin verify" README.md commands/ui-ralph.md commands/ui-ralph/verify.md scripts/ui-ralph-harness.js &&
+    check_has "commit spec" README.md commands/ui-ralph.md commands/ui-ralph/spec.md scripts/ui-ralph-harness.js &&
+    check_has "commit gen" README.md commands/ui-ralph.md commands/ui-ralph/gen.md scripts/ui-ralph-harness.js &&
+    check_has "commit verify" README.md commands/ui-ralph.md commands/ui-ralph/verify.md scripts/ui-ralph-harness.js &&
+    check_has "block awaiting_user" commands/ui-ralph.md commands/ui-ralph/spec.md &&
+    check_has "resume" commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/verify.md scripts/ui-ralph-harness.js &&
+    check_has "receipts/" README.md commands/ui-ralph.md scripts/ui-ralph-harness.js &&
+    check_has "artifact changed after commit" scripts/ui-ralph-harness.js &&
     check_has "ui-ralph harness gate spec" commands/ui-ralph.md &&
     check_has "ui-ralph harness gate gen" commands/ui-ralph.md &&
     check_has "ui-ralph harness gate verify" commands/ui-ralph.md &&

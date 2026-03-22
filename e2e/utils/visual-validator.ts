@@ -12,6 +12,38 @@ export interface ValidationResult {
   failures: ValidationFailure[];
 }
 
+export interface LayoutExpectation {
+  width?: number;
+  height?: number;
+  x?: number;
+  y?: number;
+  right?: number;
+  bottom?: number;
+  centerX?: number;
+  centerY?: number;
+}
+
+export interface PlacementExpectation {
+  top?: number;
+  left?: number;
+  right?: number;
+  width?: number;
+  height?: number;
+  marginTop?: number;
+}
+
+export interface AlignmentGapExpectation {
+  target: Locator;
+  axis?: 'horizontal' | 'vertical';
+  value: number;
+}
+
+export interface AlignmentExpectation {
+  horizontalCenterWithin?: Locator;
+  leftAlignedWithin?: Locator;
+  gapTo?: AlignmentGapExpectation;
+}
+
 export async function validateStyles(
   locator: Locator,
   expectedStyles: Record<string, string>,
@@ -49,7 +81,7 @@ export async function validateStyles(
 
 export async function validateLayout(
   locator: Locator,
-  expected: { width?: number; height?: number; x?: number; y?: number },
+  expected: LayoutExpectation,
   options?: { tolerance?: number },
 ): Promise<ValidationResult> {
   const tolerance = options?.tolerance ?? 2;
@@ -57,17 +89,7 @@ export async function validateLayout(
 
   const box = await locator.boundingBox();
   if (!box) {
-    return {
-      passed: false,
-      failures: [
-        {
-          property: 'boundingBox',
-          expected: 'element visible',
-          actual: 'null (not visible)',
-          diff: 'element not found or not visible',
-        },
-      ],
-    };
+    return missingBoundingBoxResult();
   }
 
   const checks: Array<{
@@ -92,6 +114,30 @@ export async function validateLayout(
     checks.push({ property: 'x', expected: expected.x, actual: box.x });
   if (expected.y !== undefined)
     checks.push({ property: 'y', expected: expected.y, actual: box.y });
+  if (expected.right !== undefined)
+    checks.push({
+      property: 'right',
+      expected: expected.right,
+      actual: box.x + box.width,
+    });
+  if (expected.bottom !== undefined)
+    checks.push({
+      property: 'bottom',
+      expected: expected.bottom,
+      actual: box.y + box.height,
+    });
+  if (expected.centerX !== undefined)
+    checks.push({
+      property: 'centerX',
+      expected: expected.centerX,
+      actual: box.x + box.width / 2,
+    });
+  if (expected.centerY !== undefined)
+    checks.push({
+      property: 'centerY',
+      expected: expected.centerY,
+      actual: box.y + box.height / 2,
+    });
 
   for (const check of checks) {
     if (Math.abs(check.expected - check.actual) > tolerance) {
@@ -101,6 +147,173 @@ export async function validateLayout(
         actual: `${check.actual}px`,
         diff: `off by ${Math.abs(check.expected - check.actual).toFixed(1)}px`,
       });
+    }
+  }
+
+  return { passed: failures.length === 0, failures };
+}
+
+export async function validatePlacement(
+  locator: Locator,
+  expected: PlacementExpectation,
+  options?: { tolerance?: number; container?: Locator },
+): Promise<ValidationResult> {
+  const tolerance = options?.tolerance ?? 2;
+  const box = await locator.boundingBox();
+
+  if (!box) {
+    return missingBoundingBoxResult();
+  }
+
+  const containerBox = options?.container
+    ? await options.container.boundingBox()
+    : null;
+
+  if (options?.container && !containerBox) {
+    return {
+      passed: false,
+      failures: [
+        {
+          property: 'placement.container',
+          expected: 'container visible',
+          actual: 'null (not visible)',
+          diff: 'container not found or not visible',
+        },
+      ],
+    };
+  }
+
+  const referenceTop = containerBox?.y ?? 0;
+  const referenceLeft = containerBox?.x ?? 0;
+  const referenceRight = containerBox
+    ? containerBox.x + containerBox.width
+    : undefined;
+  const failures: ValidationFailure[] = [];
+
+  pushNumericFailureIfNeeded(
+    failures,
+    'top',
+    expected.top,
+    box.y - referenceTop,
+    tolerance,
+  );
+  pushNumericFailureIfNeeded(
+    failures,
+    'left',
+    expected.left,
+    box.x - referenceLeft,
+    tolerance,
+  );
+  pushNumericFailureIfNeeded(
+    failures,
+    'width',
+    expected.width,
+    box.width,
+    tolerance,
+  );
+  pushNumericFailureIfNeeded(
+    failures,
+    'height',
+    expected.height,
+    box.height,
+    tolerance,
+  );
+  pushNumericFailureIfNeeded(
+    failures,
+    'right',
+    expected.right,
+    referenceRight !== undefined ? referenceRight - (box.x + box.width) : box.x + box.width,
+    tolerance,
+  );
+  pushNumericFailureIfNeeded(
+    failures,
+    'marginTop',
+    expected.marginTop,
+    box.y - referenceTop,
+    tolerance,
+  );
+
+  return { passed: failures.length === 0, failures };
+}
+
+export async function validateAlignment(
+  locator: Locator,
+  expected: AlignmentExpectation,
+  options?: { tolerance?: number },
+): Promise<ValidationResult> {
+  const tolerance = options?.tolerance ?? 2;
+  const box = await locator.boundingBox();
+
+  if (!box) {
+    return missingBoundingBoxResult();
+  }
+
+  const failures: ValidationFailure[] = [];
+
+  if (expected.horizontalCenterWithin) {
+    const containerBox = await expected.horizontalCenterWithin.boundingBox();
+    if (!containerBox) {
+      failures.push({
+        property: 'horizontalCenterWithin',
+        expected: 'container visible',
+        actual: 'null (not visible)',
+        diff: 'alignment container not found or not visible',
+      });
+    } else {
+      const actualCenter = box.x + box.width / 2;
+      const expectedCenter = containerBox.x + containerBox.width / 2;
+      pushNumericFailureIfNeeded(
+        failures,
+        'horizontalCenterWithin',
+        expectedCenter,
+        actualCenter,
+        tolerance,
+      );
+    }
+  }
+
+  if (expected.leftAlignedWithin) {
+    const containerBox = await expected.leftAlignedWithin.boundingBox();
+    if (!containerBox) {
+      failures.push({
+        property: 'leftAlignedWithin',
+        expected: 'container visible',
+        actual: 'null (not visible)',
+        diff: 'alignment container not found or not visible',
+      });
+    } else {
+      pushNumericFailureIfNeeded(
+        failures,
+        'leftAlignedWithin',
+        containerBox.x,
+        box.x,
+        tolerance,
+      );
+    }
+  }
+
+  if (expected.gapTo) {
+    const targetBox = await expected.gapTo.target.boundingBox();
+    if (!targetBox) {
+      failures.push({
+        property: 'gapTo',
+        expected: 'target visible',
+        actual: 'null (not visible)',
+        diff: 'gap target not found or not visible',
+      });
+    } else {
+      const axis = expected.gapTo.axis ?? 'vertical';
+      const actualGap =
+        axis === 'horizontal'
+          ? box.x - (targetBox.x + targetBox.width)
+          : box.y - (targetBox.y + targetBox.height);
+      pushNumericFailureIfNeeded(
+        failures,
+        `gapTo.${axis}`,
+        expected.gapTo.value,
+        actualGap,
+        tolerance,
+      );
     }
   }
 
@@ -146,6 +359,41 @@ function isStyleMatch(
   }
 
   return false;
+}
+
+function pushNumericFailureIfNeeded(
+  failures: ValidationFailure[],
+  property: string,
+  expected: number | undefined,
+  actual: number | undefined,
+  tolerance: number,
+): void {
+  if (expected === undefined || actual === undefined) {
+    return;
+  }
+
+  if (Math.abs(expected - actual) > tolerance) {
+    failures.push({
+      property,
+      expected: `${expected}px`,
+      actual: `${actual}px`,
+      diff: `off by ${Math.abs(expected - actual).toFixed(1)}px`,
+    });
+  }
+}
+
+function missingBoundingBoxResult(): ValidationResult {
+  return {
+    passed: false,
+    failures: [
+      {
+        property: 'boundingBox',
+        expected: 'element visible',
+        actual: 'null (not visible)',
+        diff: 'element not found or not visible',
+      },
+    ],
+  };
 }
 
 function normalizeColor(color: string): string | null {

@@ -33,7 +33,7 @@ function printUsage(exitCode) {
 Usage:
   ui-ralph install [all|claude|codex]
   ui-ralph uninstall [all|claude|codex]
-  ui-ralph harness <init|status|gate> [...]
+  ui-ralph harness <init|status|begin|commit|block|resume|approve|gate> [...]
   `);
   process.exit(exitCode);
 }

@@ -1,0 +1,23 @@
+{
+  "id": "exact-awaiting-approval",
+  "qualityMode": "exact",
+  "source": "figma",
+  "ref": "golden-exact-awaiting-approval",
+  "steps": [
+    { "args": ["begin", "spec"] },
+    { "args": ["commit", "spec"] },
+    { "args": ["gate", "spec"] },
+    { "args": ["begin", "gen"] },
+    { "args": ["commit", "gen"] },
+    { "args": ["gate", "gen"] },
+    { "args": ["begin", "verify"] },
+    { "args": ["commit", "verify"] },
+    { "args": ["gate", "verify"], "exitCode": 1 }
+  ],
+  "expectation": {
+    "runState": "blocked",
+    "inputFsmState": "verify.awaiting_approval",
+    "lastVerificationResult": "PASS",
+    "blockedReasonCode": "awaiting_approval"
+  }
+}

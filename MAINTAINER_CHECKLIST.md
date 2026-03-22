@@ -113,6 +113,9 @@
 기준:
 - 루트에 `.ui-spec.json`, `.ui-progress.json`, `.ui-artifacts/`, `test-results/`를 만들도록 유도하면 실패다
 - 산출물 경로 설명과 clean 경로는 모두 `e2e/` 하위로 통일되어야 한다
+- `e2e/.ui-ralph-run.json` 같은 하네스 상태도 clean 대상에 포함되어야 한다
+- `e2e/.ui-ralph-run.json`이 authoritative state여야 한다
+- `e2e/.ui-progress.json`은 남더라도 레거시 mirror 또는 파생 산출물로만 취급해야 한다
 - Playwright `outputDir`는 `e2e/test-results`로 향해야 한다
 
 확인 포인트:
@@ -209,6 +212,10 @@
 기준:
 - 문서가 하네스(`ui-ralph harness ...`) 사용을 요구해야 한다
 - Gate Check가 단순 파일 존재 확인이 아니라 하네스 gate 명령을 사용해야 한다
+- 각 Stage 시작 시 `ui-ralph harness begin <stage>`, 완료 직후 `ui-ralph harness commit <stage>`로 FSM 상태와 receipt를 남기게 해야 한다
+- receipt는 현재 run의 `runId`와 artifact hash를 기록해야 한다
+- 이전 run에서 남은 spec/report 파일만으로 gate가 통과되면 실패다
+- block/resume/approve가 상태 머신과 연결돼 있어야 한다
 - 하네스 스크립트가 `spec -> gen -> verify` 순서를 실제로 집행해야 한다
 - verification report가 PASS가 아니면 하네스가 완료를 허용하면 안 된다
 
@@ -247,7 +254,8 @@ rg -n "spec → gen → verify|검증\\(Stage 3\\)을 실행하지 않고|verifi
 rg -n "Playwright 설치 여부와 관계없이|선택 사항이 아니다|ERROR 리포트" commands/ui-ralph.md commands/ui-ralph/verify.md README.md
 rg -n "수동 검증|대체 수단|누락된 Stage" commands/ui-ralph.md commands/ui-ralph/verify.md
 rg -n "get_metadata|OUTPUT TRUNCATED|sourceNodeId|모호하면" commands/ui-ralph/spec.md commands/ui-ralph.md
-rg -n "e2e/.ui-spec.json|e2e/.ui-artifacts|e2e/.ui-progress.json|e2e/test-results|outputDir: './test-results'" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md e2e/playwright.config.ts
+rg -n "e2e/.ui-spec.json|e2e/.ui-artifacts|e2e/.ui-ralph-run.json|e2e/test-results|outputDir: './test-results'" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md commands/ui-ralph/clean.md e2e/playwright.config.ts
+rg -n "e2e/.ui-progress.json|legacy|mirror|authoritative state" README.md commands/ui-ralph.md commands/ui-ralph/clean.md
 rg -n "UNVERIFIED|0건|skip되었|AI 비전 리뷰 미실행|required check" commands/ui-ralph.md commands/ui-ralph/verify.md README.md
 rg -n "verification.route|\\[id\\]|:id|\\{id\\}|구체 URL" commands/ui-ralph/spec.md commands/ui-ralph/verify.md
 rg -n "단일 컴포넌트 전용이 아니다|멀티페이지|공유 컴포넌트|우회하지 않는다|입력을 나누어 순차 처리" commands/ui-ralph.md
@@ -255,7 +263,7 @@ rg -n "우선순위 규칙|modify보다|figma 모드를 우선|screenshot 모드
 rg -n "inline:figma-current-turn|inline:user-attachment|인라인 참조|현재 턴 컨텍스트|designScreenshot을 `null`로 두면 안 된다" commands/ui-ralph/spec.md commands/ui-ralph/verify.md
 rg -n "\\.claude/commands|AGENTS.md|Codex does not use Claude slash-command installation|ui-ralph uninstall codex|mention[s]? of `ui-ralph`" README.md bin/setup.js
 rg -n "qualityMode|referenceType|exact|best-effort|approved-text-reference|text-reference.md" commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/verify.md README.md
-rg -n "ui-ralph harness|\\.ui-ralph-run.json|gate spec|gate gen|gate verify|stateful harness" README.md commands/ui-ralph.md scripts/ui-ralph-harness.js bin/setup.js
+rg -n "ui-ralph harness|\\.ui-ralph-run.json|begin spec|begin gen|begin verify|commit spec|commit gen|commit verify|block awaiting_user|resume|gate spec|gate gen|gate verify|stateful harness|receipts/" README.md commands/ui-ralph.md commands/ui-ralph/spec.md commands/ui-ralph/gen.md commands/ui-ralph/verify.md scripts/ui-ralph-harness.js bin/setup.js
 rg -n "human-approval.json|harness approve|complete verification|AI vision PASS" README.md commands/ui-ralph.md commands/ui-ralph/verify.md scripts/ui-ralph-harness.js
 ```
 

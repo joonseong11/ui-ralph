@@ -16,8 +16,20 @@ description: e2e/.ui-spec.json 기준으로 구현 결과를 3단계 검증 (스
 - `UNVERIFIED`: 필요한 검증이 skip되었거나, 입력/경로/스크린샷 부족으로 완전한 검증이 불가능할 때 사용한다
 - `UNVERIFIED`를 `PASS`처럼 요약하거나 "스크린샷 비교까지 통과"라고 표현하면 안 된다
 - `qualityMode = exact`이면 승인된 reference 기준이 실제로 존재해야만 `PASS`를 낼 수 있다
+- `qualityMode = exact`이면 deterministic verification contract(`authStrategy`, `fixtureRefs`, `externalDeps`, `browserProfile`)가 Stage 1에서 이미 확정돼 있어야 한다
+- `qualityMode = exact`이면 `placement`, `alignment`, `typography`, `assets` 중 실제 실행된 검증 카테고리가 `verification.sceneRequirements.minCategories` 이상이어야만 PASS 후보가 된다
+- `qualityMode = exact`인데 `verification.sceneRequirements.mustCheckPlacement` 또는 `mustCheckAlignment`가 `true`라면 해당 assertion 수가 0건인 순간 `UNVERIFIED`다
+- PASS 전에 `difference ledger`가 반드시 있어야 한다. 형식은 `남은 차이 0건 / 의도적 차이 N건 / 환경 차이 N건`이며, 이 표가 없으면 완료를 선언하지 않는다
 
 ## 전제 조건
+
+`e2e/.ui-ralph-run.json`이 있는 오케스트레이션 실행이라면, Stage 2 완료 직후 이미 다음 명령이 성공했어야 한다:
+
+```bash
+ui-ralph harness gate gen
+```
+
+하네스가 있는 경우 이 gate를 우회하지 않는다.
 
 **반드시** 다음 명령을 Bash 도구로 실행하여 필수 파일 존재를 확인한다:
 
@@ -35,6 +47,7 @@ test -f e2e/.ui-spec.json && test -f e2e/.ui-artifacts/e2e-spec.ts && echo "GATE
 - 필수 파일이 없는 상태에서 "구현은 완료되었다"고 판단하지 않는다
 - 필수 파일이 없는 상태에서 수동 검증을 완료 대안으로 제안하지 않는다
 - `/ui-ralph:verify`는 누락된 선행 산출물을 스스로 추론해서 보완하려고 하지 않는다. 반드시 `/ui-ralph:spec`과 `/ui-ralph:gen`을 먼저 요구한다
+- `qualityMode = exact`인데 deterministic verification contract가 없으면 verify를 진행하지 않는다. Stage 1로 돌아가 스펙을 보완한다
 
 **dev server:** `e2e/playwright.config.ts`에 `webServer` 설정이 있으면 Playwright가 자동으로 시작한다. 없으면 사용자에게 dev server 실행을 안내한다.
 
@@ -66,6 +79,8 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 - FAIL인 테스트의 console.log 출력에서 실패 상세 추출
 - 실행 자체가 실패한 경우: 에러 메시지를 그대로 리포트에 기록
 - 스타일/레이아웃 검증이 실제로 몇 건 실행되었는지 집계한다
+- placement/alignment assertion 수와 exact 카테고리 커버리지를 집계한다
+- 레이아웃 검증은 scene root뿐 아니라 subgroup locator의 `x`, `width`, `right`, `centerX` 같은 bounding-box metric도 동일하게 required check로 집계한다
 - style/layout 검증이 0건이거나 required test가 skip되면 최종 결과는 `UNVERIFIED`다
 
 ## 2. Stage 3: AI 비전 리뷰
@@ -78,6 +93,7 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 3. 두 이미지를 비교하여 시각적 차이점을 분석한다
 4. 차이점을 목록으로 작성한다
 5. 둘 중 하나라도 파일이 없으면 최종 결과는 `UNVERIFIED`다
+6. `e2e/.ui-spec.json`의 `assetParity.mode = exact-svg | exact-png`인 요소가 있으면 scene 루트 전체 비교만으로 끝내지 않는다. 해당 요소 또는 컴포넌트 crop 기준 렌더 스냅샷 비교도 기록한다
 
 **designScreenshot이 `inline:*` 참조인 경우:**
 1. 현재 턴 컨텍스트에 남아 있는 디자인 이미지를 시각적 참조로 사용한다
@@ -106,6 +122,8 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 - Playwright: {버전 또는 "N/A"}
 - Dev server: {실행 상태}
 - 테스트 파일: e2e/.ui-artifacts/e2e-spec.ts
+- 루트 스크린샷: e2e/.ui-artifacts/impl-screenshot.png
+- 컴포넌트 crop: e2e/.ui-artifacts/component-crop.png
 
 ## 스타일 검증 — {PASS/FAIL/ERROR} ({통과 수}/{전체 수})
 | 요소 | 속성 | 스펙 | 실제 | 결과 |
@@ -113,7 +131,7 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 | {element.id} | {property} | {expected} | {actual} | ✓/✗ |
 
 ## 레이아웃 검증 — {PASS/FAIL/ERROR} ({통과 수}/{전체 수})
-| 요소 | 속성 | 스펙 | 실제 | 오차 | 결과 |
+| 요소 | 속성 (`x`, `width`, `right`, `centerX` 등) | 스펙 | 실제 | 오차 | 결과 |
 |------|------|------|------|------|------|
 | {element.id} | {property} | {expected} | {actual} | {diff} | ✓/✗ |
 
@@ -122,6 +140,9 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 
 ## 검증 완전성
 - Style/Layout 실행 건수: {실행 수}
+- Placement assertion 수: {건수}
+- Alignment assertion 수: {건수}
+- Exact 카테고리 커버리지: {placement | alignment | typography | assets 중 실제 실행된 목록}
 - Playwright skipped tests: {건수}
 - AI 비전 필요 여부: {required | optional | n/a}
 - 완전성 판정: {complete | incomplete}
@@ -132,6 +153,13 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 ## 수정 이력
 {/ui-ralph 오케스트레이터에서 호출된 경우에만 기록. 독립 실행 시 이 섹션은 비어있음}
 
+## Difference Ledger
+| 유형 | 건수 | 비고 |
+|------|------|------|
+| 남은 차이 | 0 | {없으면 "없음"} |
+| 의도적 차이 | {N} | {설명} |
+| 환경 차이 | {N} | {설명} |
+
 최종 결과: {PASS/FAIL/ERROR/UNVERIFIED}
 ```
 
@@ -139,11 +167,19 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 
 **UNVERIFIED 상태:**
 - Playwright tests가 skip되었거나 스타일/레이아웃 검증이 0건 실행된 경우
+- reference 상 중요한 full-bleed/center/subgroup alignment가 있는데 spec이 root/background/button만 검증하도록 남아 있었다면 coverage 부족으로 보고 Stage 1을 보완해야 한다
 - `verification.route`가 실제로 렌더 가능한 구체 URL이 아니었던 경우
 - `meta.source`가 `figma` 또는 `screenshot`인데 `designScreenshot`이 없어서 AI 비전 리뷰를 수행하지 못한 경우
 - AI 비전 리뷰가 required인데 `e2e/.ui-artifacts/design-ref.png` 또는 `e2e/.ui-artifacts/impl-screenshot.png`가 없었던 경우
+- exact에서 컴포넌트 crop(`e2e/.ui-artifacts/component-crop.png`)이 없어서 SVG/asset parity 또는 국소 비교를 수행하지 못한 경우
 - AI 비전 리뷰가 required인데 `designScreenshot`이 인라인 참조였으나 현재 턴 컨텍스트에 더 이상 남아 있지 않았던 경우
 - `meta.qualityMode = exact`인데 `referenceType`이 `none`이거나 text-only 승인 reference가 없는 경우
+- `meta.qualityMode = exact`인데 `verification.authStrategy`, `verification.fixtureRefs`, `verification.externalDeps`, `verification.browserProfile` 중 하나라도 없거나 `browserProfile.name`이 비어 있는 경우
+- `meta.qualityMode = exact`인데 `fixtureRefs`에 적은 파일이 실제로 없거나, `authStrategy = fixed-auth-state`인데 auth state fixture가 없는 경우
+- `meta.qualityMode = exact`인데 `placement` assertion 수가 0건이면서 `verification.sceneRequirements.mustCheckPlacement = true`인 경우
+- `meta.qualityMode = exact`인데 `alignment` assertion 수가 0건이면서 `verification.sceneRequirements.mustCheckAlignment = true`인 경우
+- `meta.qualityMode = exact`인데 실제 실행된 검증 카테고리 수가 `verification.sceneRequirements.minCategories`보다 적은 경우
+- `Difference Ledger` 섹션이 없거나, `남은 차이`가 0건이 아닌 상태에서 PASS로 표기한 경우
 - 위 조건 중 하나라도 있으면 "검증 통과"라고 표현하지 않는다
 
 ## 4. 결과 판정 및 출력
@@ -156,8 +192,25 @@ npx playwright test e2e/.ui-artifacts/e2e-spec.ts --reporter=list
 - **UNVERIFIED:** 누락된 검증 조건을 요약하고 "△ 검증 불충분. 리포트: e2e/.ui-artifacts/verification-report.md" 출력
 - `qualityMode = best-effort`이면 PASS는 best-effort 범위 통과를 뜻하며 exact parity 보장을 의미하지 않는다
 - `qualityMode = exact`이면 검증 PASS 후에도 `e2e/.ui-artifacts/human-approval.json` 승인 기록이 있어야 최종 완료 가능하다
+- PASS를 말하기 전에 `Difference Ledger`의 `남은 차이`가 0건인지 확인한다
 
-**진행 상태 업데이트:** `e2e/.ui-progress.json`이 존재하면 (`/ui-ralph` 오케스트레이터에서 호출된 경우) `stages.verify.status`를 `"done"`, `stages.verify.completedAt`을 현재 시각으로 업데이트한다.
+**authoritative state 반영:** 이 Stage 문서는 별도 `e2e/.ui-progress.json`을 직접 갱신하지 않는다. authoritative state 갱신은 `ui-ralph harness begin verify`, `ui-ralph harness commit verify`, `ui-ralph harness gate verify`, `ui-ralph harness block`, `ui-ralph harness resume`, `ui-ralph harness approve`가 `e2e/.ui-ralph-run.json`에서 처리한다.
+
+**하네스 receipt 기록:** `e2e/.ui-ralph-run.json`이 존재하면, 먼저 다음 명령으로 Stage를 시작한다:
+
+```bash
+ui-ralph harness begin verify
+```
+
+`e2e/.ui-artifacts/verification-report.md` 작성 직후 다음 명령을 실행한다:
+
+```bash
+ui-ralph harness commit verify
+```
+
+이 receipt는 현재 run의 verification report hash, impl screenshot hash, `최종 결과`, `완전성 판정`, `AI 비전 리뷰` 값을 `e2e/.ui-artifacts/receipts/<runId>/input-N/verify.json`에 기록한다. commit 없이 Stage 3을 완료 처리하지 않는다.
+
+검증 FAIL은 `repair.pending`, 재시도 한도 초과는 `repair.retry_exhausted`, 필수 전제조건 부족은 `blocked.missing_prerequisite`, 사용자 확인 필요는 `blocked.awaiting_user`, exact 승인 대기는 `verify.awaiting_approval`로 남긴다.
 
 **FAIL 출력 예시:**
 ```
