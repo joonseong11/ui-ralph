@@ -1,0 +1,16 @@
+{
+  "id": "exact-scene-coverage-incomplete",
+  "qualityMode": "exact",
+  "source": "figma",
+  "ref": "golden-exact-scene-coverage-incomplete",
+  "steps": [
+    { "args": ["begin", "spec"] },
+    { "args": ["commit", "spec"], "exitCode": 1 }
+  ],
+  "expectation": {
+    "runState": "running",
+    "inputFsmState": "spec.generating",
+    "lastVerificationResult": null,
+    "blockedReasonCode": null
+  }
+}

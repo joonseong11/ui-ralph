@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "source": "figma",
+    "sourceRef": "golden-exact-scene-coverage-incomplete",
+    "designScreenshot": "e2e/.ui-artifacts/design-ref.png",
+    "qualityMode": "exact",
+    "referenceType": "figma",
+    "createdAt": "2026-04-02T00:00:00.000Z"
+  },
+  "component": {
+    "name": "GoldenExactSceneCoverageIncomplete",
+    "targetPath": "src/components/GoldenExactSceneCoverageIncomplete.tsx",
+    "description": "golden exact scene coverage incomplete"
+  },
+  "sceneCoverage": {
+    "inputReferenceCount": 3,
+    "mappedReferenceCount": 2,
+    "unmappedReferences": ["figma-node-3"],
+    "status": "incomplete"
+  },
+  "scenes": [
+    {
+      "id": "scene-one",
+      "name": "Scene One",
+      "sourceRef": "figma-node-1",
+      "sourceNodeId": "1:1",
+      "stateCondition": "default",
+      "route": "/demo/one",
+      "designScreenshot": "e2e/.ui-artifacts/design-ref.png",
+      "assets": [],
+      "elements": [
+        {
+          "id": "heroOne",
+          "testId": "hero-one",
+          "sourceNodeId": "1:1"
+        }
+      ],
+      "verification": {
+        "viewport": { "width": 375, "height": 812 },
+        "baseURL": "http://localhost:3000",
+        "route": "/demo/one",
+        "dataStrategy": "seeded",
+        "authStrategy": "fixed-auth-state",
+        "fixtureRefs": ["e2e/fixtures/auth/storage-state.json"],
+        "externalDeps": ["api:demo:one"],
+        "browserProfile": {
+          "name": "mobile-chrome",
+          "deviceScaleFactor": 3,
+          "isMobile": true,
+          "hasTouch": true
+        },
+        "sceneRequirements": {
+          "mustCheckPlacement": true,
+          "mustCheckAlignment": true,
+          "mustCheckTypography": false,
+          "mustCheckAssets": false,
+          "minCategories": 3
+        },
+        "styleTolerance": 1,
+        "layoutTolerance": 2,
+        "maxAutoFixAttempts": 3
+      }
+    }
+  ]
+}
