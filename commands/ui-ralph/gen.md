@@ -59,6 +59,10 @@ test -f e2e/.ui-spec.json && echo "GATE PASS" || echo "GATE FAIL"
 
 `e2e/.ui-artifacts/e2e-spec.ts` 파일을 생성한다.
 
+- `scenes[]`가 있으면 테스트는 scene별로 나눈다
+- 최소한 `test.describe(scene.id, ...)` 단위로 분리한다
+- exact 모드에서 scene가 여러 개인데 scene별 describe/coverage가 없으면 Stage 2를 완료하지 않는다
+
 **테스트 구조:**
 
 ```typescript

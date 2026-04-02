@@ -18,6 +18,9 @@ description: e2e/.ui-spec.json 기준으로 구현 결과를 3단계 검증 (스
 - `qualityMode = exact`이면 승인된 reference 기준이 실제로 존재해야만 `PASS`를 낼 수 있다
 - `qualityMode = exact`이면 deterministic verification contract(`authStrategy`, `fixtureRefs`, `externalDeps`, `browserProfile`)가 Stage 1에서 이미 확정돼 있어야 한다
 - `qualityMode = exact`이면 `placement`, `alignment`, `typography`, `assets` 중 실제 실행된 검증 카테고리가 `verification.sceneRequirements.minCategories` 이상이어야만 PASS 후보가 된다
+- `qualityMode = exact`이고 `scenes[]`가 있으면 **모든 scene이 PASS 또는 명시적 제외 사유를 가져야 한다**. 일부 scene만 통과한 상태로 전체 PASS를 낼 수 없다
+- `qualityMode = exact`이고 `sceneCoverage.status != complete`이면 verify를 PASS로 끝내지 않는다
+- exact 모드에서는 spec뿐 아니라 **원본 Figma reference를 최종 판정 기준**으로 삼는다. spec에 없는 원본 차이가 발견되면 PASS가 아니다
 - `qualityMode = exact`인데 `verification.sceneRequirements.mustCheckPlacement` 또는 `mustCheckAlignment`가 `true`라면 해당 assertion 수가 0건인 순간 `UNVERIFIED`다
 - PASS 전에 `difference ledger`가 반드시 있어야 한다. 형식은 `남은 차이 0건 / 의도적 차이 N건 / 환경 차이 N건`이며, 이 표가 없으면 완료를 선언하지 않는다
 

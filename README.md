@@ -9,11 +9,13 @@ AI agent skills that build UI from Figma/screenshot/text and iterate until all t
 
 Ralph takes a design input and automatically:
 
-1. **Extracts specs** from Figma links, screenshots, text descriptions, or existing components
+1. **Extracts scene specs** from Figma links, screenshots, text descriptions, or existing components
 2. **Generates code** with proper Tailwind classes and project conventions
 3. **Runs verification** — computed styles, layout bounding box on root + critical subgroups, AI vision comparison
-4. **Auto-fixes failures** — iterates up to 3 times until tests pass
+4. **Auto-fixes failures** — iterates until tests pass or the repair budget is exhausted
 5. **Reports results** — verification report + screenshots for PR
+
+The core rule for this version is simple: **exact mode must treat the original Figma as the final authority, not a lossy summary.** If scene coverage is incomplete, if a Figma link is unmapped, or if verify cannot prove parity against the original reference, the run must not pass.
 
 ## Install
 
@@ -96,6 +98,18 @@ The authoritative state file is `e2e/.ui-ralph-run.json`. It is now organized ar
 In exact mode, `ui-ralph harness gate verify` will refuse to complete unless the verification report is `PASS`, verification completeness is `complete`, AI vision is `PASS` for visual references, and a human approval file exists.
 
 ## Replay Harness
+
+## Current exact-mode design rule
+
+For complex product work, especially multi-page or multi-state Figma requests, Ralph must not treat a single flattened spec as sufficient evidence of parity. The exact-mode happy path is:
+
+1. split the request into scenes
+2. map every Figma reference into scene coverage
+3. generate scene-aware verification
+4. fail the run if any scene is unmapped, unverified, or visually different from the original Figma reference
+
+This is the critical product requirement for the current version.
+
 
 `ui-ralph` includes a replay harness for regression checking of the FSM contract.
 

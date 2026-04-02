@@ -174,7 +174,15 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 
 `e2e/.ui-spec.json`을 Write 도구로 생성한다.
 
-**스펙 포맷:**
+### 핵심 구조 규칙
+
+- 단일 화면이면 top-level `elements`를 써도 된다
+- **멀티 페이지, 멀티 상태, 멀티 단계 플로우, variant, 예외 케이스가 있으면 반드시 `scenes[]`를 사용한다**
+- exact 모드에서 Figma 링크가 여러 개면 `scenes[]` 없이 Stage 1을 완료하지 않는다
+- exact 모드에서 모든 Figma 링크/노드가 `scene.sourceRef` 또는 `scene.sourceNodeId`로 매핑되지 않으면 Stage 1을 완료하지 않는다
+- exact 모드에서 `sceneCoverage`가 `complete`가 아니면 Stage 1을 완료하지 않는다
+
+**권장 스펙 포맷:**
 
 ```json
 {
@@ -191,89 +199,95 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
     "targetPath": "src/.../Component.tsx",
     "description": "설명"
   },
-  "assets": [
+  "sceneCoverage": {
+    "inputReferenceCount": 0,
+    "mappedReferenceCount": 0,
+    "unmappedReferences": [],
+    "status": "complete | incomplete"
+  },
+  "scenes": [
     {
-      "nodeId": "Figma 노드 ID",
-      "name": "파일명 (확장자 제외)",
-      "format": "svg | png",
-      "targetPath": "public/icons/icon-name.svg",
-      "description": "에셋 설명"
-    }
-  ],
-  "elements": [
-    {
-      "id": "camelCase 식별자",
-      "testId": "kebab-case data-testid",
-      "sourceNodeId": "Figma 노드 ID 또는 null",
-      "parentContext": {
-        "testId": "부모 또는 scene root의 data-testid",
-        "sourceNodeId": "상위 Figma 노드 ID 또는 null"
-      },
-      "placement": {
-        "top": 24,
-        "left": 0,
-        "right": 0,
-        "width": 375,
-        "height": 224,
-        "marginTop": 24,
-        "tolerance": 1
-      },
-      "alignment": {
-        "horizontalCenterWithin": "intro-root",
-        "leftAlignedWithin": null,
-        "gapTo": {
-          "target": "intro-title",
-          "axis": "vertical",
-          "value": 16
+      "id": "photoTicketCreateStep1",
+      "name": "포토티켓 만들기 1단계",
+      "sourceRef": "원본 Figma URL 또는 입력 참조",
+      "sourceNodeId": "18236:17446",
+      "stateCondition": "제작 가능 티켓 있음 / step1",
+      "route": "/photo-ticket/create",
+      "designScreenshot": "e2e/.ui-artifacts/design-ref-step1.png",
+      "assets": [],
+      "elements": [
+        {
+          "id": "ticketEventCard",
+          "testId": "ticket-event-card",
+          "sourceNodeId": "18236:17446",
+          "parentContext": {
+            "testId": "photo-ticket-create-root",
+            "sourceNodeId": "18236:17446"
+          },
+          "placement": {
+            "top": 24,
+            "left": 16,
+            "width": 343,
+            "height": 180,
+            "tolerance": 2
+          },
+          "alignment": {
+            "horizontalCenterWithin": "photo-ticket-create-root",
+            "tolerance": 2
+          },
+          "assetParity": {
+            "mode": "exact-png",
+            "allowApproximation": false
+          },
+          "styles": {
+            "border-radius": "24px"
+          },
+          "layout": {
+            "x": 16,
+            "width": 343,
+            "height": 180,
+            "right": 359,
+            "centerX": 187.5,
+            "tolerance": 2
+          }
+        }
+      ],
+      "verification": {
+        "viewport": { "width": 375, "height": 812 },
+        "baseURL": "http://localhost:3000",
+        "route": "/photo-ticket/create",
+        "dataStrategy": "seeded",
+        "authStrategy": "fixed-auth-state",
+        "fixtureRefs": ["e2e/fixtures/photo-ticket/step1.json", "e2e/fixtures/auth/storage-state.json"],
+        "externalDeps": ["api:photo-ticket:create-step1"],
+        "browserProfile": {
+          "name": "mobile-chrome",
+          "deviceScaleFactor": 3,
+          "isMobile": true,
+          "hasTouch": true
         },
-        "tolerance": 2
-      },
-      "assetParity": {
-        "mode": "exact-svg | exact-png | allow-approximation",
-        "allowApproximation": false
-      },
-      "styles": {
-        "background-color": "rgba/rgb 값",
-        "border-radius": "px 값",
-        "font-size": "px 값"
-      },
-      "layout": {
-        "x": 0,
-        "width": 375,
-        "height": 224,
-        "right": 375,
-        "centerX": 187.5,
-        "tolerance": 2
+        "sceneRequirements": {
+          "mustCheckPlacement": true,
+          "mustCheckAlignment": true,
+          "mustCheckTypography": true,
+          "mustCheckAssets": true,
+          "minCategories": 3
+        },
+        "styleTolerance": 1,
+        "layoutTolerance": 2,
+        "maxAutoFixAttempts": 3
       }
     }
-  ],
-  "verification": {
-    "viewport": { "width": 375, "height": 812 },
-    "baseURL": "http://localhost:3000",
-    "route": "/",
-    "dataStrategy": "static | seeded | mocked | live",
-    "authStrategy": "none | fixed-auth-state | seeded-user | mocked-auth",
-    "fixtureRefs": ["e2e/fixtures/example.json"],
-    "externalDeps": ["api:user-feed:v1"],
-    "browserProfile": {
-      "name": "mobile-chrome",
-      "deviceScaleFactor": 3,
-      "isMobile": true,
-      "hasTouch": true
-    },
-    "sceneRequirements": {
-      "mustCheckPlacement": true,
-      "mustCheckAlignment": true,
-      "mustCheckTypography": false,
-      "mustCheckAssets": false,
-      "minCategories": 3
-    },
-    "styleTolerance": 1,
-    "layoutTolerance": 2,
-    "maxAutoFixAttempts": 3
-  }
+  ]
 }
 ```
+
+### exact 모드 필수 규칙
+
+- scene가 2개 이상이면 verify는 scene별로 PASS/FAIL을 기록해야 한다
+- state/variant/예외 케이스는 scene를 분리한다
+- animation/prototype 재사용 요구는 일반 element 설명으로 묻지 말고 별도 scene 또는 별도 계약으로 기록한다
+- `photo ticket`, `multi-step`, `variants`, `empty/filled/in-progress`, `modal`, `drawer`, `bottom-sheet` 같은 다중 상태 요구는 top-level `elements`만으로 처리하지 않는다
 
 **필드 규칙:**
 - `styles` 키는 kebab-case CSS 속성명 (예: `background-color`, 절대 `backgroundColor` 아님)

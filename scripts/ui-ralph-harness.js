@@ -904,8 +904,10 @@ function assertQualityConsistency(state, spec) {
 function assertSpecStructure(spec) {
   const meta = spec.meta || {};
   const component = spec.component || {};
+  const hasScenes = Array.isArray(spec.scenes) && spec.scenes.length > 0;
   const elements = Array.isArray(spec.elements) ? spec.elements : [];
   const verification = spec.verification || {};
+  const sceneCoverage = spec.sceneCoverage || null;
 
   if (!validSources.has(meta.source)) {
     exitWith(`Spec meta.source must be one of ${Array.from(validSources).join(', ')}`);
@@ -1001,22 +1003,51 @@ function assertSpecStructure(spec) {
     exitWith(`verification.route must be concrete: ${verification.route}`);
   }
 
-  if (elements.length === 0) {
-    exitWith('Spec must contain at least one verifiable element');
+  if (!hasScenes && elements.length === 0) {
+    exitWith('Spec must contain at least one verifiable element or use scenes[]');
+  }
+
+  if (meta.qualityMode === 'exact' && hasScenes) {
+    if (!sceneCoverage || sceneCoverage.status !== 'complete') {
+      exitWith('Exact scene-based specs require sceneCoverage.status=complete');
+    }
+    if (Number(sceneCoverage.inputReferenceCount || 0) > Number(sceneCoverage.mappedReferenceCount || 0)) {
+      exitWith('Exact scene-based specs cannot leave input references unmapped');
+    }
+    if (Array.isArray(sceneCoverage.unmappedReferences) && sceneCoverage.unmappedReferences.length > 0) {
+      exitWith('Exact scene-based specs cannot contain unmappedReferences');
+    }
   }
 
   const testIds = new Set();
-  for (const element of elements) {
-    if (!element || typeof element !== 'object') {
-      exitWith('Each spec element must be an object');
+  const sceneList = hasScenes ? spec.scenes : [{ id: 'root', elements, verification }];
+  for (const scene of sceneList) {
+    if (!scene || typeof scene !== 'object') {
+      exitWith('Each scene must be an object');
     }
-    if (!element.id || !element.testId) {
-      exitWith('Each spec element requires id and testId');
+    if (hasScenes && (!scene.id || !scene.sourceRef)) {
+      exitWith('Each scene requires id and sourceRef');
     }
-    if (testIds.has(element.testId)) {
-      exitWith(`Duplicate element testId in spec: ${element.testId}`);
+    const sceneElements = Array.isArray(scene.elements) ? scene.elements : [];
+    const sceneVerification = scene.verification || verification;
+    if (sceneElements.length === 0) {
+      exitWith(`Scene must contain at least one verifiable element: ${scene.id || 'unknown'}`);
     }
-    testIds.add(element.testId);
+    if (!sceneVerification.baseURL || !sceneVerification.route) {
+      exitWith(`Scene verification.baseURL and verification.route are required: ${scene.id || 'unknown'}`);
+    }
+    for (const element of sceneElements) {
+      if (!element || typeof element !== 'object') {
+        exitWith('Each spec element must be an object');
+      }
+      if (!element.id || !element.testId) {
+        exitWith('Each spec element requires id and testId');
+      }
+      if (testIds.has(element.testId)) {
+        exitWith(`Duplicate element testId in spec: ${element.testId}`);
+      }
+      testIds.add(element.testId);
+    }
   }
 
   if ((meta.source === 'figma' || meta.source === 'screenshot') && !meta.designScreenshot) {
