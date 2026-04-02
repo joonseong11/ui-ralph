@@ -9,11 +9,12 @@ AI agent skills that build UI from Figma/screenshot/text and iterate until all t
 
 Ralph takes a design input and automatically:
 
-1. **Extracts scene specs** from Figma links, screenshots, text descriptions, or existing components
-2. **Generates code** with proper Tailwind classes and project conventions
-3. **Runs verification** — computed styles, layout bounding box on root + critical subgroups, AI vision comparison
-4. **Auto-fixes failures** — iterates until tests pass or the repair budget is exhausted
-5. **Reports results** — verification report + screenshots for PR
+1. **Plans first** — summarizes the request, identifies missing decisions, and asks follow-up questions when needed
+2. **Extracts scene specs** from Figma links, screenshots, text descriptions, or existing components
+3. **Generates code** with proper Tailwind classes and project conventions
+4. **Runs verification** — computed styles, layout bounding box on root + critical subgroups, AI vision comparison
+5. **Auto-fixes failures** — iterates until tests pass or the repair budget is exhausted
+6. **Reports results** — verification report + screenshots for PR
 
 The core rule for this version is simple: **exact mode must treat the original Figma as the final authority, not a lossy summary.** If scene coverage is incomplete, if a Figma link is unmapped, or if verify cannot prove parity against the original reference, the run must not pass.
 
@@ -27,6 +28,8 @@ The postinstall script automatically copies skills to `.claude/commands/` and e2
 It also adds a managed `ui-ralph` block to the project root `AGENTS.md` so Codex can trigger the same pipeline.
 
 ## Usage
+
+Ralph is not meant to jump straight into implementation on ambiguous requests. For complex work it should first enter a lightweight planning mode, point out missing decisions, show implementation options when there are multiple valid approaches, and keep asking until the request is detailed enough to execute safely.
 
 In Claude Code:
 
@@ -103,10 +106,11 @@ In exact mode, `ui-ralph harness gate verify` will refuse to complete unless the
 
 For complex product work, especially multi-page or multi-state Figma requests, Ralph must not treat a single flattened spec as sufficient evidence of parity. The exact-mode happy path is:
 
-1. split the request into scenes
-2. map every Figma reference into scene coverage
-3. generate scene-aware verification
-4. fail the run if any scene is unmapped, unverified, or visually different from the original Figma reference
+1. run a planning pass and collect missing decisions first
+2. split the request into scenes
+3. map every Figma reference into scene coverage
+4. generate scene-aware verification
+5. fail the run if any scene is unmapped, unverified, or visually different from the original Figma reference
 
 This is the critical product requirement for the current version.
 

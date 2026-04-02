@@ -23,8 +23,9 @@
 ### UIR-001 Stage Order Is Strict
 
 기준:
-- `/ui-ralph`는 항상 `spec -> gen -> verify` 순서를 강제해야 한다
+- `/ui-ralph`는 항상 `plan -> spec -> gen -> verify` 순서를 강제해야 한다
 - 어떤 이유로도 Stage 2나 Stage 3를 건너뛴 채 완료 처리하면 실패다
+- 요구사항이 불충분한데 plan 없이 바로 spec으로 진입하면 실패다
 
 확인 포인트:
 - `commands/ui-ralph.md`에 단계 순서와 skip 금지 문구가 남아 있는가

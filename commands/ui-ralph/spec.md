@@ -8,6 +8,9 @@ description: 디자인 입력(Figma/텍스트/이미지/컴포넌트)에서 e2e/
 
 ## 정확도 우선 원칙
 
+- spec 전에 반드시 plan stage를 거친다. 요구사항의 빈칸과 선택지를 먼저 드러낸다
+- plan stage에서 `착수 가능 여부: no`였다면 사용자 보완 없이 spec을 쓰지 않는다
+
 - `e2e/.ui-spec.json`은 요약 메모가 아니라 구현과 검증의 source of truth다. 확인된 값만 기록한다
 - 사용자가 요청한 디자인과 일치하는 것이 최우선이다. 불완전한 입력이나 모호한 디테일을 추측으로 채우지 않는다
 - 레이아웃이 flush/full-bleed, 중심축, 서브 텍스트/아이콘 정렬에 의존하면 scene root만 기록하지 않는다. outer frame, centered block, 내부 row 같은 **서브그룹도 별도 element**로 올려 `x`, `width`, `right`, `centerX` 같은 bounding-box 기준을 남긴다

@@ -2,6 +2,10 @@
 
 ## 0.6.1
 
+### Added
+- Added a planning-first requirement so `ui-ralph` should surface missing decisions, show implementation options when relevant, and ask follow-up questions before entering spec on ambiguous requests.
+
+
 ### Changed
 - Strengthened exact-mode parity rules so the original Figma reference is treated as the final authority instead of a lossy flattened spec.
 - Added scene-oriented spec guidance for complex multi-page, multi-state, and multi-variant UI requests.
